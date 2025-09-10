@@ -12,11 +12,9 @@
     <style>
         :root {
             --audio-panel-width: 300px;
-            --audio-panel-transition: width 0.3s ease, padding 0.3s ease;
         }
         body {
             display: flex;
-            overflow: hidden; /* Prevent body scrollbars */
         }
         .presentation-container {
             display: flex;
@@ -26,7 +24,6 @@
         .reveal {
             width: calc(100% - var(--audio-panel-width));
             height: 100%;
-            transition: width 0.3s ease;
         }
         #audio-panel {
             width: var(--audio-panel-width);
@@ -37,354 +34,341 @@
             box-sizing: border-box;
             overflow-y: auto;
             font-family: sans-serif;
-            transition: var(--audio-panel-transition);
-            position: relative;
         }
-        #audio-panel-toggle {
-            position: absolute;
-            left: -30px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 30px;
-            height: 60px;
-            background: #e0e0e0;
-            border: 1px solid #ddd;
-            border-right: none;
-            border-top-left-radius: 8px;
-            border-bottom-left-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            z-index: 10;
+        #audio-panel h3 {
+            margin-top: 0;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
         }
-        /* Collapsed state */
-        .presentation-container.collapsed #audio-panel {
-            width: 0;
-            padding: 0 0;
-            border-left: none;
+        .audio-item {
+            margin-bottom: 15px;
         }
-        .presentation-container.collapsed .reveal {
+        .audio-item label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .audio-item audio {
             width: 100%;
         }
-        .presentation-container.collapsed #audio-panel-toggle i {
-            transform: rotate(180deg);
-        }
 
-        #audio-panel h3 { margin-top: 0; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
-        .audio-item { margin-bottom: 15px; }
-        .audio-item label { display: block; font-weight: bold; margin-bottom: 5px; }
-        .audio-item audio { width: 100%; }
-
-        /* === STYLES CHO ZOOM & PAN & ANNOTATION CONTAINER === */
-        .slide-container {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            overflow: hidden;
-            pointer-events: none; /* Pass clicks through by default */
-        }
-        .transform-wrapper {
-            position: absolute;
-            width: 100%; height: 100%;
-            transform-origin: center center;
-            transition: transform 0.2s ease;
-            pointer-events: auto; /* Capture mouse events */
-        }
-        .zoomable-bg {
-            width: 100%; height: 100%;
+        /* === STYLES CHO ZOOM & PAN === */
+        .reveal .slides section .zoomable-bg {
+            width: 100%;
+            height: 100%;
             object-fit: contain;
-        }
-        .transform-wrapper.panning {
-            cursor: grabbing;
-            transition: none;
-        }
-        .transform-wrapper.pannable {
             cursor: grab;
+            transition: transform 0.2s ease;
         }
-        #annotation-canvas {
+         .reveal .slides section .zoomable-bg:active {
+            cursor: grabbing;
+        }
+        #zoom-controls {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
+            top: 20px;
+            right: 20px;
+            z-index: 30;
+            background: rgba(0,0,0,0.7);
+            padding: 5px;
+            border-radius: 5px;
         }
-        
-        #zoom-controls { position: absolute; top: 20px; right: calc(var(--audio-panel-width) + 20px); z-index: 30; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 5px; transition: right 0.3s ease;}
-        .presentation-container.collapsed #zoom-controls { right: 20px; }
-        #zoom-controls button { background: #fff; color: #000; border: 1px solid #ccc; width: 35px; height: 35px; cursor: pointer; }
+         #zoom-controls button {
+            background: #fff;
+            color: #000;
+            border: 1px solid #ccc;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+        }
 
         /* === STYLES CHO CÔNG CỤ CHÚ THÍCH === */
-        .annotation-toolbar { position: fixed; bottom: 20px; left: calc((100% - var(--audio-panel-width)) / 2); transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 8px; border-radius: 8px; z-index: 101; display: flex; align-items: center; gap: 5px; transition: left 0.3s ease; }
-        .presentation-container.collapsed .annotation-toolbar { left: 50%; }
-        .tool-btn { background: #fff; color: #333; border: none; width: 40px; height: 40px; font-size: 18px; cursor: pointer; border-radius: 5px; display: flex; align-items: center; justify-content: center; }
-        .tool-btn.active { background: #007bff; color: white; }
-        
-        body.annotation-active .transform-wrapper { cursor: crosshair !important; }
-        .text-input-overlay { position: absolute; z-index: 11; border: 1px dashed #007bff; background: rgba(255, 255, 255, 0.9); font-size: 24px; padding: 5px; outline: none; }
+        #annotation-canvas {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 10;
+        }
+        body.annotation-active #annotation-canvas { pointer-events: auto; }
+        body.text-tool-active #annotation-canvas { cursor: text; }
+        body.pen-tool-active #annotation-canvas { cursor: crosshair; }
+        body.highlight-tool-active #annotation-canvas { cursor: crosshair; }
+        body.line-tool-active #annotation-canvas { cursor: crosshair; }
+        body.eraser-tool-active #annotation-canvas { cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewport='0 0 24 24' fill='none' stroke='black'><rect x='4' y='4' width='16' height='16' rx='2' ry='2' stroke-width='2' fill='white'/></svg>") 12 12, auto; }
+
+        .annotation-toolbar {
+            position: fixed; bottom: 20px; left: calc((100% - var(--audio-panel-width)) / 2);
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 8px; border-radius: 8px;
+            z-index: 101; display: flex; align-items: center; gap: 5px;
+        }
+        .annotation-toolbar .tool-btn {
+            background: #fff; color: #333; border: none;
+            width: 40px; height: 40px; font-size: 18px;
+            cursor: pointer; border-radius: 5px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .annotation-toolbar .tool-btn.active {
+            background: #007bff; color: white;
+        }
+        .text-input-overlay {
+            position: absolute; z-index: 11;
+            border: 1px dashed #007bff; background: rgba(255, 255, 255, 0.9);
+            font-size: 24px; padding: 5px; outline: none;
+        }
     </style>
 </head>
 <body>
 <div class="presentation-container">
     <div class="reveal">
         <div class="slides">
-            <section data-background-image="Assets/lesson-10/images/page-1.jpg"></section>
-            <section data-background-image="Assets/lesson-10/images/page-2.jpg"></section>
-            <section data-background-image="Assets/lesson-10/images/page-3.jpg"></section>
-            <section data-background-image="Assets/lesson-10/images/page-4.jpg"></section>
-            <section data-background-image="Assets/lesson-10/images/page-5.jpg"></section>
+            <section><img class="zoomable-bg" src="assets/lesson-10/images/page-1.jpg"></section>
+            <section><img class="zoomable-bg" src="assets/lesson-10/images/page-2.jpg"></section>
+            <section><img class="zoomable-bg" src="assets/lesson-10/images/page-3.jpg"></section>
+            <section><img class="zoomable-bg" src="assets/lesson-10/images/page-4.jpg"></section>
+            <section><img class="zoomable-bg" src="assets/lesson-10/images/page-5.jpg"></section>
+        </div>
+
+        <!-- Công cụ Zoom -->
+        <div id="zoom-controls">
+            <button id="zoom-in-btn" title="Phóng to">+</button>
+            <button id="zoom-out-btn" title="Thu nhỏ">-</button>
+            <button id="zoom-reset-btn" title="Reset">_</button>
         </div>
     </div>
+
     <div id="audio-panel">
-        <button id="audio-panel-toggle"><i class="fa-solid fa-chevron-right"></i></button>
         <h3>Audio Files</h3>
-        <div class="audio-item"><label>Exercise 1:</label><audio controls src="Assets/lesson-10/audio/lesson-10-ex1.mp3"></audio></div>
-        <div class="audio-item"><label>Exercise 2:</label><audio controls src="Assets/lesson-10/audio/lesson-10-ex2.mp3"></audio></div>
-        <div class="audio-item"><label>Exercise 3:</label><audio controls src="Assets/lesson-10/audio/lesson-10-ex3.mp3"></audio></div>
-        <div class="audio-item"><label>Exercise 4:</label><audio controls src="Assets/lesson-10/audio/lesson-10-ex4.mp3"></audio></div>
-        <div class="audio-item"><label>Exercise 5:</label><audio controls src="Assets/lesson-10/audio/lesson-10-ex5.mp3"></audio></div>
-        <div class="audio-item"><label>Exercise 8:</label><audio controls src="Assets/lesson-10/audio/lesson-10-ex8.mp3"></audio></div>
-        <div class="audio-item"><label>Exercise 9:</label><audio controls src="Assets/lesson-10/audio/lesson-10-ex9.mp3"></audio></div>
+        <div class="audio-item">
+            <label>Exercise 1:</label>
+            <audio controls src="assets/lesson-10/audio/lesson-10-ex1.mp3"></audio>
+        </div>
+        <div class="audio-item">
+            <label>Exercise 2:</label>
+            <audio controls src="assets/lesson-10/audio/lesson-10-ex2.mp3"></audio>
+        </div>
+        <div class="audio-item">
+            <label>Exercise 3:</label>
+            <audio controls src="assets/lesson-10/audio/lesson-10-ex3.mp3"></audio>
+        </div>
+        <div class="audio-item">
+            <label>Exercise 4:</label>
+            <audio controls src="assets/lesson-10/audio/lesson-10-ex4.mp3"></audio>
+        </div>
+        <div class="audio-item">
+            <label>Exercise 5:</label>
+            <audio controls src="assets/lesson-10/audio/lesson-10-ex5.mp3"></audio>
+        </div>
+        <div class="audio-item">
+            <label>Exercise 8:</label>
+            <audio controls src="assets/lesson-10/audio/lesson-10-ex8.mp3"></audio>
+        </div>
+        <div class="audio-item">
+            <label>Exercise 9:</label>
+            <audio controls src="assets/lesson-10/audio/lesson-10-ex9.mp3"></audio>
+        </div>
     </div>
 </div>
-    <!-- Container cho các công cụ -->
-    <div class="slide-container">
-        <div class="transform-wrapper">
-            <canvas id="annotation-canvas"></canvas>
-        </div>
-    </div>
-    <div id="zoom-controls">
-        <button id="zoom-in-btn" title="Phóng to">+</button>
-        <button id="zoom-out-btn" title="Thu nhỏ">-</button>
-        <button id="zoom-reset-btn" title="Reset"><i class="fa-solid fa-expand"></i></button>
-    </div>
+
+    <canvas id="annotation-canvas"></canvas>
     <div class="annotation-toolbar">
         <button class="tool-btn" id="pen-tool" title="Vẽ (P)"><i class="fa-solid fa-pencil"></i></button>
         <button class="tool-btn" id="highlight-tool" title="Highlight (H)"><i class="fa-solid fa-highlighter"></i></button>
         <button class="tool-btn" id="line-tool" title="Đường thẳng (L)"><i class="fa-solid fa-minus"></i></button>
         <button class="tool-btn" id="text-tool" title="Viết chữ (T)"><i class="fa-solid fa-font"></i></button>
         <button class="tool-btn" id="eraser-tool" title="Tẩy (E)"><i class="fa-solid fa-eraser"></i></button>
-        <div class="separator" style="width:1px; height:30px; background:#666; margin:0 5px;"></div>
+        <div class="separator"></div>
         <input type="color" id="color-picker" title="Chọn màu" value="#FF0000">
-        <div class="separator" style="width:1px; height:30px; background:#666; margin:0 5px;"></div>
+        <div class="separator"></div>
         <button class="tool-btn" id="clear-tool" title="Xóa hết"><i class="fa-solid fa-trash"></i></button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.js"></script>
     <script>
-        Reveal.initialize({ history: false, center: true, slideNumber: true });
+        Reveal.initialize({ history: false });
 
-        const transformWrapper = document.querySelector('.transform-wrapper');
-        const annotationCanvas = document.getElementById('annotation-canvas');
-        const ctx = annotationCanvas.getContext('2d');
-        const slideContainer = document.querySelector('.slide-container');
+        const imageTransforms = new Map();
 
-        let currentTransform = { scale: 1, x: 0, y: 0 };
-        const slideAnnotations = new Map();
+        function applyTransform(image, transform) {
+            if (!image) return;
+            const t = transform || { scale: 1, x: 0, y: 0 };
+            image.style.transform = `scale(${t.scale}) translate(${t.x}px, ${t.y}px)`;
+        }
+
+        function getCurrentSlideImage() {
+            const currentSlide = Reveal.getCurrentSlide();
+            return currentSlide ? currentSlide.querySelector('.zoomable-bg') : null;
+        }
+        
+        function resetCurrentZoom() {
+             const image = getCurrentSlideImage();
+             if(image) {
+                const key = image.src;
+                const transform = { scale: 1, x: 0, y: 0 };
+                imageTransforms.set(key, transform);
+                applyTransform(image, transform);
+             }
+        }
+        
+        // === LOGIC CHO ZOOM & PAN ===
+        document.getElementById('zoom-in-btn').addEventListener('click', () => {
+            const image = getCurrentSlideImage();
+            if (!image) return;
+            const key = image.src;
+            const t = imageTransforms.get(key) || { scale: 1, x: 0, y: 0 };
+            t.scale *= 1.2;
+            applyTransform(image, t);
+        });
+
+        document.getElementById('zoom-out-btn').addEventListener('click', () => {
+            const image = getCurrentSlideImage();
+            if (!image) return;
+            const key = image.src;
+            const t = imageTransforms.get(key) || { scale: 1, x: 0, y: 0 };
+            t.scale /= 1.2;
+            applyTransform(image, t);
+        });
+
+        document.getElementById('zoom-reset-btn').addEventListener('click', resetCurrentZoom);
+
+        let isPanning = false;
+        let startPanX, startPanY;
+
+        Reveal.getRevealElement().addEventListener('mousedown', (e) => {
+            const image = getCurrentSlideImage();
+            if (e.target === image) {
+                const t = imageTransforms.get(image.src) || { scale: 1, x: 0, y: 0 };
+                if (t.scale > 1) {
+                    isPanning = true;
+                    startPanX = e.clientX - t.x * t.scale;
+                    startPanY = e.clientY - t.y * t.scale;
+                    image.style.transition = 'none'; // Disable transition while panning
+                }
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isPanning) {
+                const image = getCurrentSlideImage();
+                if (!image) return;
+                const key = image.src;
+                const t = imageTransforms.get(key);
+                t.x = (e.clientX - startPanX) / t.scale;
+                t.y = (e.clientY - startPanY) / t.scale;
+                applyTransform(image, t);
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isPanning) {
+                 const image = getCurrentSlideImage();
+                 if(image) image.style.transition = 'transform 0.2s ease';
+                 isPanning = false;
+            }
+        });
+
+
+        // === LOGIC CHO CÔNG CỤ CHÚ THÍCH NÂNG CAO ===
+        const canvas = document.getElementById('annotation-canvas');
+        const ctx = canvas.getContext('2d');
+        const toolbar = document.querySelector('.annotation-toolbar');
+        
         let currentTool = '';
         let isDrawing = false;
         let strokeColor = '#ff0000';
-        let startX, startY;
+        const savedAnnotations = new Map();
 
-        // --- CORE FUNCTIONS ---
-        function applyTransform() {
-            transformWrapper.style.transform = `translate(${currentTransform.x}px, ${currentTransform.y}px) scale(${currentTransform.scale})`;
-            transformWrapper.classList.toggle('pannable', currentTransform.scale > 1);
-        }
+        function resizeCanvas() {
+            const { width, height } = Reveal.getComputedSlideSize();
+            canvas.width = width;
+            canvas.height = height;
+            const scale = Reveal.getScale();
+            const revealEl = Reveal.getRevealElement();
+            const revealRect = revealEl.getBoundingClientRect();
 
-        function resizeAndPositionElements() {
-            const slide = Reveal.getCurrentSlide();
-            if (!slide) return;
-            const slideRect = slide.getBoundingClientRect();
-            
-            slideContainer.style.top = `${slideRect.top}px`;
-            slideContainer.style.left = `${slideRect.left}px`;
-            slideContainer.style.width = `${slideRect.width}px`;
-            slideContainer.style.height = `${slideRect.height}px`;
-
-            annotationCanvas.width = slideRect.width;
-            annotationCanvas.height = slideRect.height;
+            canvas.style.transform = `translate(-50%, -50%) scale(${scale})`;
+            canvas.style.top = '50%';
+            canvas.style.left = `${revealRect.left + revealRect.width / 2}px`;
             
             loadAnnotations(Reveal.getIndices());
         }
-        
-        function resetZoom() {
-            currentTransform = { scale: 1, x: 0, y: 0 };
-            applyTransform();
-        }
 
-        // --- ANNOTATION SAVE/LOAD ---
-        function saveAnnotations(indices) {
-            if (!indices) return;
-            const key = `${indices.h}-${indices.v}`;
-            const imageData = annotationCanvas.toDataURL();
-            if (!isCanvasBlank(annotationCanvas)) {
-                slideAnnotations.set(key, imageData);
-            } else {
-                slideAnnotations.delete(key);
-            }
-        }
-        function loadAnnotations(indices) {
-            ctx.clearRect(0, 0, annotationCanvas.width, annotationCanvas.height);
-            if (!indices) return;
-            const key = `${indices.h}-${indices.v}`;
-            if (slideAnnotations.has(key)) {
-                const img = new Image();
-                img.src = slideAnnotations.get(key);
-                img.onload = () => ctx.drawImage(img, 0, 0);
-            }
-        }
-        function isCanvasBlank(canvas) {
-            const context = canvas.getContext('2d');
-            const pixelBuffer = new Uint32Array(context.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
-            return !pixelBuffer.some(color => color !== 0);
-        }
+        window.addEventListener('resize', resizeCanvas);
+        Reveal.on('ready', resizeCanvas);
 
-        // --- EVENT LISTENERS ---
-        Reveal.on('ready', resizeAndPositionElements);
-        Reveal.on('resize', resizeAndPositionElements);
-        Reveal.on('slidechanged', event => {
-            saveAnnotations(Reveal.getIndices(event.previousSlide));
-            resetZoom();
-            resizeAndPositionElements();
-        });
-        window.addEventListener('resize', resizeAndPositionElements);
-
-
-        // --- AUDIO PANEL TOGGLE ---
-        document.getElementById('audio-panel-toggle').addEventListener('click', () => {
-            document.querySelector('.presentation-container').classList.toggle('collapsed');
-            setTimeout(resizeAndPositionElements, 300);
-        });
-
-
-        // --- ZOOM & PAN LOGIC ---
-        document.getElementById('zoom-in-btn').addEventListener('click', () => { currentTransform.scale *= 1.2; applyTransform(); });
-        document.getElementById('zoom-out-btn').addEventListener('click', () => { currentTransform.scale = Math.max(1, currentTransform.scale / 1.2); applyTransform(); });
-        document.getElementById('zoom-reset-btn').addEventListener('click', resetZoom);
-        
-        let isPanning = false;
-        let panStartX, panStartY;
-        transformWrapper.addEventListener('mousedown', (e) => {
-            if (currentTransform.scale > 1 && currentTool === '') {
-                isPanning = true;
-                panStartX = e.clientX - currentTransform.x;
-                panStartY = e.clientY - currentTransform.y;
-                transformWrapper.classList.add('panning');
-            }
-        });
-        window.addEventListener('mousemove', (e) => {
-            if (isPanning) {
-                currentTransform.x = e.clientX - panStartX;
-                currentTransform.y = e.clientY - panStartY;
-                applyTransform();
-            }
-        });
-        window.addEventListener('mouseup', () => {
-            isPanning = false;
-            transformWrapper.classList.remove('panning');
-        });
-
-
-        // --- ANNOTATION DRAWING LOGIC ---
-        function getDrawPosition(e) {
-            const rect = annotationCanvas.getBoundingClientRect();
+        function getCanvasPosition(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scale = Reveal.getScale();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             return {
-                x: (clientX - rect.left) / currentTransform.scale,
-                y: (clientY - rect.top) / currentTransform.scale,
+                x: (clientX - rect.left) / scale,
+                y: (clientY - rect.top) / scale,
             };
         }
-        
-        function start(e) {
-            e.preventDefault(); 
-            isDrawing = true; 
-            const pos = getDrawPosition(e); 
-            startX = pos.x; 
-            startY = pos.y; 
-            ctx.beginPath(); 
-            ctx.moveTo(startX, startY);
+
+        function saveAnnotations(indices) {
+            if (!indices) return;
+            const key = `${indices.h}-${indices.v}`;
+            savedAnnotations.set(key, canvas.toDataURL());
         }
-        function draw(e) {
-            e.preventDefault(); 
-            if (!isDrawing) return; 
-            const pos = getDrawPosition(e); 
-            ctx.lineCap = 'round'; 
-            ctx.lineJoin = 'round'; 
-            switch (currentTool) {
-                case 'pen': 
-                    ctx.globalCompositeOperation = 'source-over'; 
-                    ctx.strokeStyle = strokeColor; 
-                    ctx.lineWidth = 5 / currentTransform.scale; 
-                    ctx.lineTo(pos.x, pos.y); 
-                    ctx.stroke(); 
-                    break; 
-                case 'highlight': 
-                    ctx.globalCompositeOperation = 'source-over'; 
-                    ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)'; 
-                    ctx.lineWidth = 25 / currentTransform.scale; 
-                    ctx.lineTo(pos.x, pos.y); 
-                    ctx.stroke(); 
-                    break; 
-                case 'eraser': 
-                    ctx.globalCompositeOperation = 'destination-out'; 
-                    ctx.lineWidth = 20 / currentTransform.scale; 
-                    ctx.lineTo(pos.x, pos.y); 
-                    ctx.stroke(); 
-                    break;
-            }
-        }
-        function stop(e) { 
-            e.preventDefault(); 
-            if (!isDrawing) return; 
-            isDrawing = false; 
-            if (currentTool === 'line') {
-                const pos = getDrawPosition(e); 
-                ctx.globalCompositeOperation = 'source-over'; 
-                ctx.strokeStyle = strokeColor; 
-                ctx.lineWidth = 5 / currentTransform.scale; 
-                ctx.beginPath(); 
-                ctx.moveTo(startX, startY); 
-                ctx.lineTo(pos.x, pos.y); 
-                ctx.stroke();
+
+        function loadAnnotations(indices) {
+            if (!indices) return;
+            const key = `${indices.h}-${indices.v}`;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (savedAnnotations.has(key)) {
+                const img = new Image();
+                img.src = savedAnnotations.get(key);
+                img.onload = () => ctx.drawImage(img, 0, 0);
             }
         }
 
-        annotationCanvas.addEventListener('mousedown', start, { passive: false });
-        annotationCanvas.addEventListener('mousemove', draw, { passive: false });
-        annotationCanvas.addEventListener('mouseup', stop, { passive: false });
+        Reveal.on('slidechanged', event => {
+            saveAnnotations(Reveal.getIndices(event.previousSlide));
+            loadAnnotations(Reveal.getIndices(event.currentSlide));
 
-        // --- TOOLBAR LOGIC ---
-        document.querySelector('.annotation-toolbar').addEventListener('click', e => {
-            const btn = e.target.closest('.tool-btn');
-            if (!btn) return;
-            
-            const selectedTool = btn.id.replace('-tool', '');
-            if (selectedTool === 'clear') { 
-                if (confirm('Bạn có chắc muốn xóa hết chú thích trên slide này?')) { 
-                    ctx.clearRect(0, 0, annotationCanvas.width, annotationCanvas.height); 
-                } 
-                return; 
-            }
-
-            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-            document.body.classList.remove('annotation-active');
-
-            if (currentTool === selectedTool) {
-                currentTool = '';
-            } else {
-                currentTool = selectedTool;
-                btn.classList.add('active');
-                document.body.classList.add('annotation-active');
-            }
-
-            if(currentTool === ''){
-                annotationCanvas.style.pointerEvents = 'none';
-            } else {
-                annotationCanvas.style.pointerEvents = 'auto';
+            // Apply saved transform to new slide image
+            const newImage = getCurrentSlideImage();
+            if (newImage) {
+                 const t = imageTransforms.get(newImage.src) || { scale: 1, x: 0, y: 0 };
+                 applyTransform(newImage, t);
             }
         });
-        document.getElementById('color-picker').addEventListener('input', e => { strokeColor = e.target.value; });
+
+        function start(e) { /* ... existing code ... */ }
+        function draw(e) { /* ... existing code ... */ }
+        function stop(e) { /* ... existing code ... */ }
+        // (The annotation drawing functions start, draw, stop remain unchanged)
+        function start(e) {e.preventDefault(); isDrawing = true; const pos = getCanvasPosition(e); startX = pos.x; startY = pos.y; ctx.beginPath(); ctx.moveTo(startX, startY);}
+        function draw(e) {e.preventDefault(); if (!isDrawing) return; const pos = getCanvasPosition(e); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; switch (currentTool) {case 'pen': ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = strokeColor; ctx.lineWidth = 5; ctx.lineTo(pos.x, pos.y); ctx.stroke(); break; case 'highlight': ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)'; ctx.lineWidth = 25; ctx.lineTo(pos.x, pos.y); ctx.stroke(); break; case 'eraser': ctx.globalCompositeOperation = 'destination-out'; ctx.lineWidth = 20; ctx.lineTo(pos.x, pos.y); ctx.stroke(); break;}}
+        function stop(e) { e.preventDefault(); if (!isDrawing) return; isDrawing = false; if (currentTool === 'line') {const pos = getCanvasPosition(e); ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = strokeColor; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(pos.x, pos.y); ctx.stroke();}}
+
+
+        canvas.addEventListener('mousedown', start, { passive: false });
+        canvas.addEventListener('mousemove', draw, { passive: false });
+        canvas.addEventListener('mouseup', stop, { passive: false });
+        canvas.addEventListener('touchstart', start, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stop, { passive: false });
+
+        canvas.addEventListener('click', function(e) {if (currentTool !== 'text') return; const pos = getCanvasPosition(e); createTextInput(pos.x, pos.y);});
+        function createTextInput(x, y) {const input = document.createElement('textarea'); input.className = 'text-input-overlay'; const scale = Reveal.getScale(); const canvasRect = canvas.getBoundingClientRect(); input.style.left = `${canvasRect.left + (x*scale)}px`; input.style.top = `${canvasRect.top + (y*scale)}px`; input.style.fontSize = `${24 * scale}px`; document.body.appendChild(input); input.focus(); input.addEventListener('blur', () => {drawText(input.value, x, y); document.body.removeChild(input);}); input.addEventListener('keydown', (e) => {if(e.key === 'Enter' && !e.shiftKey) {input.blur();}}); }
+        function drawText(text, x, y) {ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = strokeColor; ctx.font = `${24}px sans-serif`; const lines = text.split('\n'); lines.forEach((line, index) => {ctx.fillText(line, x, y + (index * 28));});}
+
+        toolbar.addEventListener('click', e => {
+            const btn = e.target.closest('.tool-btn');
+            if (!btn) return;
+            resetCurrentZoom(); // Reset zoom when a tool is selected
+            const selectedTool = btn.id.replace('-tool', '');
+            if (selectedTool === 'clear') {if (confirm('Bạn có chắc muốn xóa tất cả chú thích trên slide này?')) {ctx.clearRect(0, 0, canvas.width, canvas.height);} return;}
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            document.body.className = document.body.className.replace(/\S+-tool-active/g, '').trim();
+            if (currentTool === selectedTool) {currentTool = ''; document.body.classList.remove('annotation-active');} else {currentTool = selectedTool; btn.classList.add('active'); document.body.classList.add('annotation-active'); document.body.classList.add(`${currentTool}-tool-active`);}
+        });
+        
+        document.getElementById('color-picker').addEventListener('input', e => {strokeColor = e.target.value;});
+
+        document.addEventListener('keydown', e => {if (e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return; const keyMap = { p: 'pen', h: 'highlight', l: 'line', t: 'text', e: 'eraser' }; if (keyMap[e.key.toLowerCase()]) {e.preventDefault(); document.getElementById(`${keyMap[e.key.toLowerCase()]}-tool`).click();}});
     </script>
 </body>
 </html>
