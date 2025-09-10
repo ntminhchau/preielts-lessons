@@ -12,7 +12,7 @@
     <style>
         :root {
             --audio-panel-width: 300px;
-            --audio-panel-transition: width 0.3s ease;
+            --audio-panel-transition: width 0.3s ease, padding 0.3s ease;
         }
         body {
             display: flex;
@@ -22,12 +22,11 @@
             display: flex;
             width: 100vw;
             height: 100vh;
-            transition: var(--audio-panel-transition);
         }
         .reveal {
             width: calc(100% - var(--audio-panel-width));
             height: 100%;
-            transition: var(--audio-panel-transition);
+            transition: width 0.3s ease;
         }
         #audio-panel {
             width: var(--audio-panel-width);
@@ -58,12 +57,13 @@
             align-items: center;
             justify-content: center;
             font-size: 18px;
+            z-index: 10;
         }
         /* Collapsed state */
         .presentation-container.collapsed #audio-panel {
             width: 0;
-            padding: 0;
-            overflow: hidden;
+            padding: 0 0;
+            border-left: none;
         }
         .presentation-container.collapsed .reveal {
             width: 100%;
@@ -82,12 +82,14 @@
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             overflow: hidden;
+            pointer-events: none; /* Pass clicks through by default */
         }
         .transform-wrapper {
             position: absolute;
             width: 100%; height: 100%;
             transform-origin: center center;
             transition: transform 0.2s ease;
+            pointer-events: auto; /* Capture mouse events */
         }
         .zoomable-bg {
             width: 100%; height: 100%;
@@ -215,7 +217,6 @@
             if (!indices) return;
             const key = `${indices.h}-${indices.v}`;
             const imageData = annotationCanvas.toDataURL();
-            // Only save if there's something on the canvas
             if (!isCanvasBlank(annotationCanvas)) {
                 slideAnnotations.set(key, imageData);
             } else {
@@ -252,7 +253,6 @@
         // --- AUDIO PANEL TOGGLE ---
         document.getElementById('audio-panel-toggle').addEventListener('click', () => {
             document.querySelector('.presentation-container').classList.toggle('collapsed');
-            // Recalculate positions after transition
             setTimeout(resizeAndPositionElements, 300);
         });
 
@@ -290,26 +290,69 @@
             const rect = annotationCanvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            // Translate screen coords to canvas coords, accounting for transform
             return {
                 x: (clientX - rect.left) / currentTransform.scale,
                 y: (clientY - rect.top) / currentTransform.scale,
             };
         }
-
-        function start(e) { /* ... */ }
-        function draw(e) { /* ... */ }
-        function stop(e) { /* ... */ }
-
-        // (Re-implementing drawing functions with correct coordinates)
-        function start(e) {e.preventDefault(); isDrawing = true; const pos = getDrawPosition(e); startX = pos.x; startY = pos.y; ctx.beginPath(); ctx.moveTo(startX, startY);}
-        function draw(e) {e.preventDefault(); if (!isDrawing) return; const pos = getDrawPosition(e); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; switch (currentTool) {case 'pen': ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = strokeColor; ctx.lineWidth = 5 / currentTransform.scale; ctx.lineTo(pos.x, pos.y); ctx.stroke(); break; case 'highlight': ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)'; ctx.lineWidth = 25 / currentTransform.scale; ctx.lineTo(pos.x, pos.y); ctx.stroke(); break; case 'eraser': ctx.globalCompositeOperation = 'destination-out'; ctx.lineWidth = 20 / currentTransform.scale; ctx.lineTo(pos.x, pos.y); ctx.stroke(); break;}}
-        function stop(e) { e.preventDefault(); if (!isDrawing) return; isDrawing = false; if (currentTool === 'line') {const pos = getDrawPosition(e); ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = strokeColor; ctx.lineWidth = 5 / currentTransform.scale; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(pos.x, pos.y); ctx.stroke();}}
+        
+        function start(e) {
+            e.preventDefault(); 
+            isDrawing = true; 
+            const pos = getDrawPosition(e); 
+            startX = pos.x; 
+            startY = pos.y; 
+            ctx.beginPath(); 
+            ctx.moveTo(startX, startY);
+        }
+        function draw(e) {
+            e.preventDefault(); 
+            if (!isDrawing) return; 
+            const pos = getDrawPosition(e); 
+            ctx.lineCap = 'round'; 
+            ctx.lineJoin = 'round'; 
+            switch (currentTool) {
+                case 'pen': 
+                    ctx.globalCompositeOperation = 'source-over'; 
+                    ctx.strokeStyle = strokeColor; 
+                    ctx.lineWidth = 5 / currentTransform.scale; 
+                    ctx.lineTo(pos.x, pos.y); 
+                    ctx.stroke(); 
+                    break; 
+                case 'highlight': 
+                    ctx.globalCompositeOperation = 'source-over'; 
+                    ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)'; 
+                    ctx.lineWidth = 25 / currentTransform.scale; 
+                    ctx.lineTo(pos.x, pos.y); 
+                    ctx.stroke(); 
+                    break; 
+                case 'eraser': 
+                    ctx.globalCompositeOperation = 'destination-out'; 
+                    ctx.lineWidth = 20 / currentTransform.scale; 
+                    ctx.lineTo(pos.x, pos.y); 
+                    ctx.stroke(); 
+                    break;
+            }
+        }
+        function stop(e) { 
+            e.preventDefault(); 
+            if (!isDrawing) return; 
+            isDrawing = false; 
+            if (currentTool === 'line') {
+                const pos = getDrawPosition(e); 
+                ctx.globalCompositeOperation = 'source-over'; 
+                ctx.strokeStyle = strokeColor; 
+                ctx.lineWidth = 5 / currentTransform.scale; 
+                ctx.beginPath(); 
+                ctx.moveTo(startX, startY); 
+                ctx.lineTo(pos.x, pos.y); 
+                ctx.stroke();
+            }
+        }
 
         annotationCanvas.addEventListener('mousedown', start, { passive: false });
         annotationCanvas.addEventListener('mousemove', draw, { passive: false });
         annotationCanvas.addEventListener('mouseup', stop, { passive: false });
-        // Touch events if needed
 
         // --- TOOLBAR LOGIC ---
         document.querySelector('.annotation-toolbar').addEventListener('click', e => {
@@ -317,7 +360,12 @@
             if (!btn) return;
             
             const selectedTool = btn.id.replace('-tool', '');
-            if (selectedTool === 'clear') { if (confirm('Bạn có chắc muốn xóa hết chú thích trên slide này?')) { ctx.clearRect(0, 0, annotationCanvas.width, annotationCanvas.height); } return; }
+            if (selectedTool === 'clear') { 
+                if (confirm('Bạn có chắc muốn xóa hết chú thích trên slide này?')) { 
+                    ctx.clearRect(0, 0, annotationCanvas.width, annotationCanvas.height); 
+                } 
+                return; 
+            }
 
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             document.body.classList.remove('annotation-active');
@@ -328,11 +376,13 @@
                 currentTool = selectedTool;
                 btn.classList.add('active');
                 document.body.classList.add('annotation-active');
+            }
+
+            if(currentTool === ''){
+                annotationCanvas.style.pointerEvents = 'none';
+            } else {
                 annotationCanvas.style.pointerEvents = 'auto';
             }
-             if(currentTool === ''){
-                 annotationCanvas.style.pointerEvents = 'none';
-             }
         });
         document.getElementById('color-picker').addEventListener('input', e => { strokeColor = e.target.value; });
     </script>
