@@ -10,6 +10,77 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 
     <style>
+        :root {
+            --audio-panel-width: 300px;
+        }
+        body {
+            display: flex;
+        }
+        .presentation-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+        .reveal {
+            width: calc(100% - var(--audio-panel-width));
+            height: 100%;
+        }
+        #audio-panel {
+            width: var(--audio-panel-width);
+            height: 100%;
+            background: #f5f5f5;
+            border-left: 1px solid #ddd;
+            padding: 15px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            font-family: sans-serif;
+        }
+        #audio-panel h3 {
+            margin-top: 0;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+        }
+        .audio-item {
+            margin-bottom: 15px;
+        }
+        .audio-item label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .audio-item audio {
+            width: 100%;
+        }
+
+        /* === STYLES CHO ZOOM & PAN === */
+        .reveal .slides section .zoomable-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: grab;
+            transition: transform 0.2s ease;
+        }
+         .reveal .slides section .zoomable-bg:active {
+            cursor: grabbing;
+        }
+        #zoom-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 30;
+            background: rgba(0,0,0,0.7);
+            padding: 5px;
+            border-radius: 5px;
+        }
+         #zoom-controls button {
+            background: #fff;
+            color: #000;
+            border: 1px solid #ccc;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+        }
+
         /* === STYLES CHO CÔNG CỤ CHÚ THÍCH === */
         #annotation-canvas {
             position: absolute; top: 0; left: 0;
@@ -24,7 +95,7 @@
         body.eraser-tool-active #annotation-canvas { cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewport='0 0 24 24' fill='none' stroke='black'><rect x='4' y='4' width='16' height='16' rx='2' ry='2' stroke-width='2' fill='white'/></svg>") 12 12, auto; }
 
         .annotation-toolbar {
-            position: fixed; bottom: 20px; left: 50%;
+            position: fixed; bottom: 20px; left: calc((100% - var(--audio-panel-width)) / 2);
             transform: translateX(-50%);
             background: rgba(0,0,0,0.8);
             padding: 8px; border-radius: 8px;
@@ -39,88 +110,65 @@
         .annotation-toolbar .tool-btn.active {
             background: #007bff; color: white;
         }
-        .annotation-toolbar input[type="color"] {
-            width: 30px; height: 30px; border: none; padding: 0;
-            background: none; cursor: pointer;
-        }
-        .annotation-toolbar .separator {
-            width: 1px; height: 30px; background: #666; margin: 0 5px;
-        }
         .text-input-overlay {
             position: absolute; z-index: 11;
             border: 1px dashed #007bff; background: rgba(255, 255, 255, 0.9);
             font-size: 24px; padding: 5px; outline: none;
         }
-        
-        /* === STYLES CHO AUDIO PLAYER === */
-        .audio-container {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .audio-container audio {
-            height: 40px;
-        }
     </style>
 </head>
 <body>
+<div class="presentation-container">
     <div class="reveal">
         <div class="slides">
-            <!-- SLIDE 1 -->
-            <section data-background-image="Assets/lesson-10/images/page-1.jpg" data-background-size="contain">
-                <!-- Audio cho Exercise 1, 2, 3 -->
-                <div class="audio-container" style="top: 40%; left: 10%;">
-                    <label>Exercise 1:</label>
-                    <audio controls src="Assets/lesson-10/audio/lesson-10-ex1.mp3"></audio>
-                </div>
-                <div class="audio-container" style="top: 59%; left: 10%;">
-                    <label>Exercise 2:</label>
-                    <audio controls src="Assets/lesson-10/audio/lesson-10-ex2.mp3"></audio>
-                </div>
-                <div class="audio-container" style="top: 75%; left: 10%;">
-                    <label>Exercise 3:</label>
-                    <audio controls src="Assets/lesson-10/audio/lesson-10-ex3.mp3"></audio>
-                </div>
-            </section>
+            <section><img class="zoomable-bg" src="Assets/lesson-10/images/page-1.jpg"></section>
+            <section><img class="zoomable-bg" src="Assets/lesson-10/images/page-2.jpg"></section>
+            <section><img class="zoomable-bg" src="Assets/lesson-10/images/page-3.jpg"></section>
+            <section><img class="zoomable-bg" src="Assets/lesson-10/images/page-4.jpg"></section>
+            <section><img class="zoomable-bg" src="Assets/lesson-10/images/page-5.jpg"></section>
+        </div>
 
-            <!-- SLIDE 2 -->
-            <section data-background-image="Assets/lesson-10/images/page-2.jpg" data-background-size="contain">
-                 <!-- Audio cho Exercise 4, 5 -->
-                 <div class="audio-container" style="top: 10%; left: 10%;">
-                    <label>Exercise 4:</label>
-                    <audio controls src="Assets/lesson-10/audio/lesson-10-ex4.mp3"></audio>
-                </div>
-                 <div class="audio-container" style="top: 50%; left: 10%;">
-                    <label>Exercise 5:</label>
-                    <audio controls src="Assets/lesson-10/audio/lesson-10-ex5.mp3"></audio>
-                </div>
-            </section>
-
-            <!-- SLIDE 3 -->
-            <section data-background-image="Assets/lesson-10/images/page-3.jpg" data-background-size="contain">
-                <!-- Audio cho Exercise 8, 9 -->
-                <div class="audio-container" style="top: 40%; left: 10%;">
-                   <label>Exercise 8:</label>
-                   <audio controls src="Assets/lesson-10/audio/lesson-10-ex8.mp3"></audio>
-               </div>
-                <div class="audio-container" style="top: 65%; left: 10%;">
-                   <label>Exercise 9:</label>
-                   <audio controls src="Assets/lesson-10/audio/lesson-10-ex9.mp3"></audio>
-               </div>
-            </section>
-
-            <!-- SLIDE 4 -->
-            <section data-background-image="Assets/lesson-10/images/page-4.jpg" data-background-size="contain"></section>
-            
-            <!-- SLIDE 5 -->
-            <section data-background-image="Assets/lesson-10/images/page-5.jpg" data-background-size="contain"></section>
+        <!-- Công cụ Zoom -->
+        <div id="zoom-controls">
+            <button id="zoom-in-btn" title="Phóng to">+</button>
+            <button id="zoom-out-btn" title="Thu nhỏ">-</button>
+            <button id="zoom-reset-btn" title="Reset">_</button>
         </div>
     </div>
 
-    <!-- === CANVAS VÀ THANH CÔNG CỤ === -->
+    <div id="audio-panel">
+        <h3>Audio Files</h3>
+        <div class="audio-item">
+            <label>Exercise 1:</label>
+            <audio controls src="Assets/lesson-10/audio/lesson-10-ex1.mp3"></audio>
+        </div>
+        <div class="audio-item">
+            <label>Exercise 2:</label>
+            <audio controls src="Assets/lesson-10/audio/lesson-10-ex2.mp3"></audio>
+        </div>
+        <div class="audio-item">
+            <label>Exercise 3:</label>
+            <audio controls src="Assets/lesson-10/audio/lesson-10-ex3.mp3"></audio>
+        </div>
+        <div class="audio-item">
+            <label>Exercise 4:</label>
+            <audio controls src="Assets/lesson-10/audio/lesson-10-ex4.mp3"></audio>
+        </div>
+        <div class="audio-item">
+            <label>Exercise 5:</label>
+            <audio controls src="Assets/lesson-10/audio/lesson-10-ex5.mp3"></audio>
+        </div>
+        <div class="audio-item">
+            <label>Exercise 8:</label>
+            <audio controls src="Assets/lesson-10/audio/lesson-10-ex8.mp3"></audio>
+        </div>
+        <div class="audio-item">
+            <label>Exercise 9:</label>
+            <audio controls src="Assets/lesson-10/audio/lesson-10-ex9.mp3"></audio>
+        </div>
+    </div>
+</div>
+
     <canvas id="annotation-canvas"></canvas>
     <div class="annotation-toolbar">
         <button class="tool-btn" id="pen-tool" title="Vẽ (P)"><i class="fa-solid fa-pencil"></i></button>
@@ -129,15 +177,95 @@
         <button class="tool-btn" id="text-tool" title="Viết chữ (T)"><i class="fa-solid fa-font"></i></button>
         <button class="tool-btn" id="eraser-tool" title="Tẩy (E)"><i class="fa-solid fa-eraser"></i></button>
         <div class="separator"></div>
-        <input type="color" id="color-picker" title="Chọn màu">
+        <input type="color" id="color-picker" title="Chọn màu" value="#FF0000">
         <div class="separator"></div>
         <button class="tool-btn" id="clear-tool" title="Xóa hết"><i class="fa-solid fa-trash"></i></button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.js"></script>
     <script>
-        // FIX: Disable history to prevent security error in sandboxed environments
         Reveal.initialize({ history: false });
+
+        const imageTransforms = new Map();
+
+        function applyTransform(image, transform) {
+            if (!image) return;
+            const t = transform || { scale: 1, x: 0, y: 0 };
+            image.style.transform = `scale(${t.scale}) translate(${t.x}px, ${t.y}px)`;
+        }
+
+        function getCurrentSlideImage() {
+            const currentSlide = Reveal.getCurrentSlide();
+            return currentSlide ? currentSlide.querySelector('.zoomable-bg') : null;
+        }
+        
+        function resetCurrentZoom() {
+             const image = getCurrentSlideImage();
+             if(image) {
+                const key = image.src;
+                const transform = { scale: 1, x: 0, y: 0 };
+                imageTransforms.set(key, transform);
+                applyTransform(image, transform);
+             }
+        }
+        
+        // === LOGIC CHO ZOOM & PAN ===
+        document.getElementById('zoom-in-btn').addEventListener('click', () => {
+            const image = getCurrentSlideImage();
+            if (!image) return;
+            const key = image.src;
+            const t = imageTransforms.get(key) || { scale: 1, x: 0, y: 0 };
+            t.scale *= 1.2;
+            applyTransform(image, t);
+        });
+
+        document.getElementById('zoom-out-btn').addEventListener('click', () => {
+            const image = getCurrentSlideImage();
+            if (!image) return;
+            const key = image.src;
+            const t = imageTransforms.get(key) || { scale: 1, x: 0, y: 0 };
+            t.scale /= 1.2;
+            applyTransform(image, t);
+        });
+
+        document.getElementById('zoom-reset-btn').addEventListener('click', resetCurrentZoom);
+
+        let isPanning = false;
+        let startPanX, startPanY;
+
+        Reveal.getRevealElement().addEventListener('mousedown', (e) => {
+            const image = getCurrentSlideImage();
+            if (e.target === image) {
+                const t = imageTransforms.get(image.src) || { scale: 1, x: 0, y: 0 };
+                if (t.scale > 1) {
+                    isPanning = true;
+                    startPanX = e.clientX - t.x * t.scale;
+                    startPanY = e.clientY - t.y * t.scale;
+                    image.style.transition = 'none'; // Disable transition while panning
+                }
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isPanning) {
+                const image = getCurrentSlideImage();
+                if (!image) return;
+                const key = image.src;
+                const t = imageTransforms.get(key);
+                t.x = (e.clientX - startPanX) / t.scale;
+                t.y = (e.clientY - startPanY) / t.scale;
+                applyTransform(image, t);
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isPanning) {
+                 const image = getCurrentSlideImage();
+                 if(image) image.style.transition = 'transform 0.2s ease';
+                 isPanning = false;
+            }
+        });
+
 
         // === LOGIC CHO CÔNG CỤ CHÚ THÍCH NÂNG CAO ===
         const canvas = document.getElementById('annotation-canvas');
@@ -147,18 +275,20 @@
         let currentTool = '';
         let isDrawing = false;
         let strokeColor = '#ff0000';
-        let startX, startY;
-        const savedAnnotations = new Map(); // Lưu trữ chú thích cho mỗi slide
+        const savedAnnotations = new Map();
 
         function resizeCanvas() {
             const { width, height } = Reveal.getComputedSlideSize();
             canvas.width = width;
             canvas.height = height;
-            const slide = Reveal.getCurrentSlide();
             const scale = Reveal.getScale();
+            const revealEl = Reveal.getRevealElement();
+            const revealRect = revealEl.getBoundingClientRect();
+
             canvas.style.transform = `translate(-50%, -50%) scale(${scale})`;
             canvas.style.top = '50%';
-            canvas.style.left = '50%';
+            canvas.style.left = `${revealRect.left + revealRect.width / 2}px`;
+            
             loadAnnotations(Reveal.getIndices());
         }
 
@@ -176,7 +306,6 @@
             };
         }
 
-        // Lưu và tải chú thích
         function saveAnnotations(indices) {
             if (!indices) return;
             const key = `${indices.h}-${indices.v}`;
@@ -197,65 +326,23 @@
         Reveal.on('slidechanged', event => {
             saveAnnotations(Reveal.getIndices(event.previousSlide));
             loadAnnotations(Reveal.getIndices(event.currentSlide));
+
+            // Apply saved transform to new slide image
+            const newImage = getCurrentSlideImage();
+            if (newImage) {
+                 const t = imageTransforms.get(newImage.src) || { scale: 1, x: 0, y: 0 };
+                 applyTransform(newImage, t);
+            }
         });
 
-        // Xử lý sự kiện vẽ
-        function start(e) {
-            e.preventDefault();
-            isDrawing = true;
-            const pos = getCanvasPosition(e);
-            startX = pos.x;
-            startY = pos.y;
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-        }
+        function start(e) { /* ... existing code ... */ }
+        function draw(e) { /* ... existing code ... */ }
+        function stop(e) { /* ... existing code ... */ }
+        // (The annotation drawing functions start, draw, stop remain unchanged)
+        function start(e) {e.preventDefault(); isDrawing = true; const pos = getCanvasPosition(e); startX = pos.x; startY = pos.y; ctx.beginPath(); ctx.moveTo(startX, startY);}
+        function draw(e) {e.preventDefault(); if (!isDrawing) return; const pos = getCanvasPosition(e); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; switch (currentTool) {case 'pen': ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = strokeColor; ctx.lineWidth = 5; ctx.lineTo(pos.x, pos.y); ctx.stroke(); break; case 'highlight': ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)'; ctx.lineWidth = 25; ctx.lineTo(pos.x, pos.y); ctx.stroke(); break; case 'eraser': ctx.globalCompositeOperation = 'destination-out'; ctx.lineWidth = 20; ctx.lineTo(pos.x, pos.y); ctx.stroke(); break;}}
+        function stop(e) { e.preventDefault(); if (!isDrawing) return; isDrawing = false; if (currentTool === 'line') {const pos = getCanvasPosition(e); ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = strokeColor; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(pos.x, pos.y); ctx.stroke();}}
 
-        function draw(e) {
-            e.preventDefault();
-            if (!isDrawing) return;
-            const pos = getCanvasPosition(e);
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-
-            switch (currentTool) {
-                case 'pen':
-                    ctx.globalCompositeOperation = 'source-over';
-                    ctx.strokeStyle = strokeColor;
-                    ctx.lineWidth = 5;
-                    ctx.lineTo(pos.x, pos.y);
-                    ctx.stroke();
-                    break;
-                case 'highlight':
-                    ctx.globalCompositeOperation = 'source-over';
-                    ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)';
-                    ctx.lineWidth = 25;
-                    ctx.lineTo(pos.x, pos.y);
-                    ctx.stroke();
-                    break;
-                case 'eraser':
-                    ctx.globalCompositeOperation = 'destination-out';
-                    ctx.lineWidth = 20;
-                    ctx.lineTo(pos.x, pos.y);
-                    ctx.stroke();
-                    break;
-            }
-        }
-        
-        function stop(e) {
-            e.preventDefault();
-            if (!isDrawing) return;
-            isDrawing = false;
-             if (currentTool === 'line') {
-                const pos = getCanvasPosition(e);
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.strokeStyle = strokeColor;
-                ctx.lineWidth = 5;
-                ctx.beginPath();
-                ctx.moveTo(startX, startY);
-                ctx.lineTo(pos.x, pos.y);
-                ctx.stroke();
-            }
-        }
 
         canvas.addEventListener('mousedown', start, { passive: false });
         canvas.addEventListener('mousemove', draw, { passive: false });
@@ -264,86 +351,24 @@
         canvas.addEventListener('touchmove', draw, { passive: false });
         canvas.addEventListener('touchend', stop, { passive: false });
 
-        // Xử lý công cụ Text
-        canvas.addEventListener('click', function(e) {
-            if (currentTool !== 'text') return;
-            const pos = getCanvasPosition(e);
-            createTextInput(pos.x, pos.y);
-        });
+        canvas.addEventListener('click', function(e) {if (currentTool !== 'text') return; const pos = getCanvasPosition(e); createTextInput(pos.x, pos.y);});
+        function createTextInput(x, y) {const input = document.createElement('textarea'); input.className = 'text-input-overlay'; const scale = Reveal.getScale(); const canvasRect = canvas.getBoundingClientRect(); input.style.left = `${canvasRect.left + (x*scale)}px`; input.style.top = `${canvasRect.top + (y*scale)}px`; input.style.fontSize = `${24 * scale}px`; document.body.appendChild(input); input.focus(); input.addEventListener('blur', () => {drawText(input.value, x, y); document.body.removeChild(input);}); input.addEventListener('keydown', (e) => {if(e.key === 'Enter' && !e.shiftKey) {input.blur();}}); }
+        function drawText(text, x, y) {ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = strokeColor; ctx.font = `${24}px sans-serif`; const lines = text.split('\n'); lines.forEach((line, index) => {ctx.fillText(line, x, y + (index * 28));});}
 
-        function createTextInput(x, y) {
-            const input = document.createElement('textarea');
-            input.className = 'text-input-overlay';
-            const scale = Reveal.getScale();
-            input.style.left = `${(x * scale) + canvas.offsetLeft}px`;
-            input.style.top = `${(y * scale) + canvas.offsetTop}px`;
-            input.style.fontSize = `${24 * scale}px`;
-            document.body.appendChild(input);
-            input.focus();
-
-            input.addEventListener('blur', () => {
-                drawText(input.value, x, y, scale);
-                document.body.removeChild(input);
-            });
-             input.addEventListener('keydown', (e) => {
-                if(e.key === 'Enter' && !e.shiftKey) {
-                    input.blur();
-                }
-            });
-        }
-
-        function drawText(text, x, y, scale) {
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.fillStyle = strokeColor;
-            ctx.font = `${24}px sans-serif`;
-            const lines = text.split('\n');
-            lines.forEach((line, index) => {
-                 ctx.fillText(line, x, y + (index * 28));
-            });
-        }
-
-        // Xử lý thanh công cụ
         toolbar.addEventListener('click', e => {
             const btn = e.target.closest('.tool-btn');
             if (!btn) return;
-            
+            resetCurrentZoom(); // Reset zoom when a tool is selected
             const selectedTool = btn.id.replace('-tool', '');
-            
-            if (selectedTool === 'clear') {
-                if (confirm('Bạn có chắc muốn xóa tất cả chú thích trên slide này?')) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                }
-                return;
-            }
-
+            if (selectedTool === 'clear') {if (confirm('Bạn có chắc muốn xóa tất cả chú thích trên slide này?')) {ctx.clearRect(0, 0, canvas.width, canvas.height);} return;}
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             document.body.className = document.body.className.replace(/\S+-tool-active/g, '').trim();
-
-            if (currentTool === selectedTool) {
-                currentTool = '';
-                document.body.classList.remove('annotation-active');
-            } else {
-                currentTool = selectedTool;
-                btn.classList.add('active');
-                document.body.classList.add('annotation-active');
-                document.body.classList.add(`${currentTool}-tool-active`);
-            }
+            if (currentTool === selectedTool) {currentTool = ''; document.body.classList.remove('annotation-active');} else {currentTool = selectedTool; btn.classList.add('active'); document.body.classList.add('annotation-active'); document.body.classList.add(`${currentTool}-tool-active`);}
         });
         
-        document.getElementById('color-picker').addEventListener('input', e => {
-            strokeColor = e.target.value;
-        });
+        document.getElementById('color-picker').addEventListener('input', e => {strokeColor = e.target.value;});
 
-        // Phím tắt
-        document.addEventListener('keydown', e => {
-            if (e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
-            const keyMap = { p: 'pen', h: 'highlight', l: 'line', t: 'text', e: 'eraser' };
-            if (keyMap[e.key.toLowerCase()]) {
-                e.preventDefault();
-                document.getElementById(`${keyMap[e.key.toLowerCase()]}-tool`).click();
-            }
-        });
-
+        document.addEventListener('keydown', e => {if (e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return; const keyMap = { p: 'pen', h: 'highlight', l: 'line', t: 'text', e: 'eraser' }; if (keyMap[e.key.toLowerCase()]) {e.preventDefault(); document.getElementById(`${keyMap[e.key.toLowerCase()]}-tool`).click();}});
     </script>
 </body>
 </html>
