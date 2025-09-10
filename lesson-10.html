@@ -16,7 +16,7 @@
         }
         body {
             display: flex;
-            overflow: hidden; /* Prevent body scrollbars */
+            overflow: hidden;
         }
         .presentation-container {
             display: flex;
@@ -59,10 +59,9 @@
             font-size: 18px;
             z-index: 10;
         }
-        /* Collapsed state */
         .presentation-container.collapsed #audio-panel {
             width: 0;
-            padding: 0 0;
+            padding: 0;
             border-left: none;
         }
         .presentation-container.collapsed .reveal {
@@ -77,23 +76,31 @@
         .audio-item label { display: block; font-weight: bold; margin-bottom: 5px; }
         .audio-item audio { width: 100%; }
 
-        /* === STYLES CHO ZOOM & PAN & ANNOTATION CONTAINER === */
-        .slide-container {
+        /* === NEW ARCHITECTURE STYLES === */
+        .slide-overlay-container {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             overflow: hidden;
-            pointer-events: none; /* Pass clicks through by default */
+            pointer-events: none;
         }
         .transform-wrapper {
             position: absolute;
             width: 100%; height: 100%;
             transform-origin: center center;
             transition: transform 0.2s ease;
-            pointer-events: auto; /* Capture mouse events */
+            pointer-events: auto;
         }
-        .zoomable-bg {
+        .slide-image {
+            position: absolute;
+            top:0; left:0;
             width: 100%; height: 100%;
             object-fit: contain;
+        }
+        #annotation-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
         }
         .transform-wrapper.panning {
             cursor: grabbing;
@@ -102,36 +109,28 @@
         .transform-wrapper.pannable {
             cursor: grab;
         }
-        #annotation-canvas {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-        }
         
         #zoom-controls { position: absolute; top: 20px; right: calc(var(--audio-panel-width) + 20px); z-index: 30; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 5px; transition: right 0.3s ease;}
         .presentation-container.collapsed #zoom-controls { right: 20px; }
         #zoom-controls button { background: #fff; color: #000; border: 1px solid #ccc; width: 35px; height: 35px; cursor: pointer; }
 
-        /* === STYLES CHO CÔNG CỤ CHÚ THÍCH === */
         .annotation-toolbar { position: fixed; bottom: 20px; left: calc((100% - var(--audio-panel-width)) / 2); transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 8px; border-radius: 8px; z-index: 101; display: flex; align-items: center; gap: 5px; transition: left 0.3s ease; }
         .presentation-container.collapsed .annotation-toolbar { left: 50%; }
         .tool-btn { background: #fff; color: #333; border: none; width: 40px; height: 40px; font-size: 18px; cursor: pointer; border-radius: 5px; display: flex; align-items: center; justify-content: center; }
         .tool-btn.active { background: #007bff; color: white; }
         
         body.annotation-active .transform-wrapper { cursor: crosshair !important; }
-        .text-input-overlay { position: absolute; z-index: 11; border: 1px dashed #007bff; background: rgba(255, 255, 255, 0.9); font-size: 24px; padding: 5px; outline: none; }
     </style>
 </head>
 <body>
 <div class="presentation-container">
     <div class="reveal">
         <div class="slides">
-            <section data-background-image="Assets/lesson-10/images/page-1.jpg"></section>
-            <section data-background-image="Assets/lesson-10/images/page-2.jpg"></section>
-            <section data-background-image="Assets/lesson-10/images/page-3.jpg"></section>
-            <section data-background-image="Assets/lesson-10/images/page-4.jpg"></section>
-            <section data-background-image="Assets/lesson-10/images/page-5.jpg"></section>
+            <section></section>
+            <section></section>
+            <section></section>
+            <section></section>
+            <section></section>
         </div>
     </div>
     <div id="audio-panel">
@@ -146,12 +145,14 @@
         <div class="audio-item"><label>Exercise 9:</label><audio controls src="Assets/lesson-10/audio/lesson-10-ex9.mp3"></audio></div>
     </div>
 </div>
-    <!-- Container cho các công cụ -->
-    <div class="slide-container">
+    
+    <div class="slide-overlay-container">
         <div class="transform-wrapper">
+            <img id="slide-image" class="slide-image" src="" alt="Slide Content"/>
             <canvas id="annotation-canvas"></canvas>
         </div>
     </div>
+
     <div id="zoom-controls">
         <button id="zoom-in-btn" title="Phóng to">+</button>
         <button id="zoom-out-btn" title="Thu nhỏ">-</button>
@@ -161,7 +162,6 @@
         <button class="tool-btn" id="pen-tool" title="Vẽ (P)"><i class="fa-solid fa-pencil"></i></button>
         <button class="tool-btn" id="highlight-tool" title="Highlight (H)"><i class="fa-solid fa-highlighter"></i></button>
         <button class="tool-btn" id="line-tool" title="Đường thẳng (L)"><i class="fa-solid fa-minus"></i></button>
-        <button class="tool-btn" id="text-tool" title="Viết chữ (T)"><i class="fa-solid fa-font"></i></button>
         <button class="tool-btn" id="eraser-tool" title="Tẩy (E)"><i class="fa-solid fa-eraser"></i></button>
         <div class="separator" style="width:1px; height:30px; background:#666; margin:0 5px;"></div>
         <input type="color" id="color-picker" title="Chọn màu" value="#FF0000">
@@ -173,10 +173,19 @@
     <script>
         Reveal.initialize({ history: false, center: true, slideNumber: true });
 
+        const slideImageSources = [
+            'Assets/lesson-10/images/page-1.jpg',
+            'Assets/lesson-10/images/page-2.jpg',
+            'Assets/lesson-10/images/page-3.jpg',
+            'Assets/lesson-10/images/page-4.jpg',
+            'Assets/lesson-10/images/page-5.jpg'
+        ];
+
         const transformWrapper = document.querySelector('.transform-wrapper');
         const annotationCanvas = document.getElementById('annotation-canvas');
+        const slideImageEl = document.getElementById('slide-image');
+        const overlayContainer = document.querySelector('.slide-overlay-container');
         const ctx = annotationCanvas.getContext('2d');
-        const slideContainer = document.querySelector('.slide-container');
 
         let currentTransform = { scale: 1, x: 0, y: 0 };
         const slideAnnotations = new Map();
@@ -185,7 +194,6 @@
         let strokeColor = '#ff0000';
         let startX, startY;
 
-        // --- CORE FUNCTIONS ---
         function applyTransform() {
             transformWrapper.style.transform = `translate(${currentTransform.x}px, ${currentTransform.y}px) scale(${currentTransform.scale})`;
             transformWrapper.classList.toggle('pannable', currentTransform.scale > 1);
@@ -196,15 +204,15 @@
             if (!slide) return;
             const slideRect = slide.getBoundingClientRect();
             
-            slideContainer.style.top = `${slideRect.top}px`;
-            slideContainer.style.left = `${slideRect.left}px`;
-            slideContainer.style.width = `${slideRect.width}px`;
-            slideContainer.style.height = `${slideRect.height}px`;
+            overlayContainer.style.top = `${slideRect.top}px`;
+            overlayContainer.style.left = `${slideRect.left}px`;
+            overlayContainer.style.width = `${slideRect.width}px`;
+            overlayContainer.style.height = `${slideRect.height}px`;
 
             annotationCanvas.width = slideRect.width;
             annotationCanvas.height = slideRect.height;
             
-            loadAnnotations(Reveal.getIndices());
+            loadAnnotations();
         }
         
         function resetZoom() {
@@ -212,18 +220,28 @@
             applyTransform();
         }
 
-        // --- ANNOTATION SAVE/LOAD ---
-        function saveAnnotations(indices) {
+        function updateSlideContent() {
+            const indices = Reveal.getIndices();
+            const slideIndex = indices.h;
+            if (slideImageSources[slideIndex]) {
+                slideImageEl.src = slideImageSources[slideIndex];
+            } else {
+                slideImageEl.src = ''; 
+            }
+        }
+
+        function saveAnnotations() {
+            const indices = Reveal.getIndices();
             if (!indices) return;
             const key = `${indices.h}-${indices.v}`;
-            const imageData = annotationCanvas.toDataURL();
             if (!isCanvasBlank(annotationCanvas)) {
-                slideAnnotations.set(key, imageData);
+                slideAnnotations.set(key, annotationCanvas.toDataURL());
             } else {
                 slideAnnotations.delete(key);
             }
         }
-        function loadAnnotations(indices) {
+        function loadAnnotations() {
+            const indices = Reveal.getIndices();
             ctx.clearRect(0, 0, annotationCanvas.width, annotationCanvas.height);
             if (!indices) return;
             const key = `${indices.h}-${indices.v}`;
@@ -234,30 +252,27 @@
             }
         }
         function isCanvasBlank(canvas) {
-            const context = canvas.getContext('2d');
-            const pixelBuffer = new Uint32Array(context.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
-            return !pixelBuffer.some(color => color !== 0);
+            return !canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data.some(channel => channel !== 0);
         }
 
-        // --- EVENT LISTENERS ---
-        Reveal.on('ready', resizeAndPositionElements);
+        Reveal.on('ready', () => {
+            updateSlideContent();
+            resizeAndPositionElements();
+        });
         Reveal.on('resize', resizeAndPositionElements);
         Reveal.on('slidechanged', event => {
-            saveAnnotations(Reveal.getIndices(event.previousSlide));
+            saveAnnotations();
             resetZoom();
+            updateSlideContent();
             resizeAndPositionElements();
         });
         window.addEventListener('resize', resizeAndPositionElements);
 
-
-        // --- AUDIO PANEL TOGGLE ---
         document.getElementById('audio-panel-toggle').addEventListener('click', () => {
             document.querySelector('.presentation-container').classList.toggle('collapsed');
             setTimeout(resizeAndPositionElements, 300);
         });
 
-
-        // --- ZOOM & PAN LOGIC ---
         document.getElementById('zoom-in-btn').addEventListener('click', () => { currentTransform.scale *= 1.2; applyTransform(); });
         document.getElementById('zoom-out-btn').addEventListener('click', () => { currentTransform.scale = Math.max(1, currentTransform.scale / 1.2); applyTransform(); });
         document.getElementById('zoom-reset-btn').addEventListener('click', resetZoom);
@@ -284,30 +299,28 @@
             transformWrapper.classList.remove('panning');
         });
 
-
-        // --- ANNOTATION DRAWING LOGIC ---
         function getDrawPosition(e) {
             const rect = annotationCanvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return {
-                x: (clientX - rect.left) / currentTransform.scale,
-                y: (clientY - rect.top) / currentTransform.scale,
-            };
+            const translatedX = (clientX - rect.left - currentTransform.x) / currentTransform.scale;
+            const translatedY = (clientY - rect.top - currentTransform.y) / currentTransform.scale;
+            return { x: translatedX, y: translatedY };
         }
         
-        function start(e) {
+        function startDrawing(e) {
+            if (currentTool === '') return;
             e.preventDefault(); 
             isDrawing = true; 
             const pos = getDrawPosition(e); 
             startX = pos.x; 
             startY = pos.y; 
-            ctx.beginPath(); 
+            ctx.beginPath();
             ctx.moveTo(startX, startY);
         }
         function draw(e) {
+            if (!isDrawing) return;
             e.preventDefault(); 
-            if (!isDrawing) return; 
             const pos = getDrawPosition(e); 
             ctx.lineCap = 'round'; 
             ctx.lineJoin = 'round'; 
@@ -321,7 +334,7 @@
                     break; 
                 case 'highlight': 
                     ctx.globalCompositeOperation = 'source-over'; 
-                    ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)'; 
+                    ctx.strokeStyle = 'rgba(255, 255, 0, 0.4)'; 
                     ctx.lineWidth = 25 / currentTransform.scale; 
                     ctx.lineTo(pos.x, pos.y); 
                     ctx.stroke(); 
@@ -334,9 +347,9 @@
                     break;
             }
         }
-        function stop(e) { 
+        function stopDrawing(e) { 
+            if (!isDrawing) return;
             e.preventDefault(); 
-            if (!isDrawing) return; 
             isDrawing = false; 
             if (currentTool === 'line') {
                 const pos = getDrawPosition(e); 
@@ -350,11 +363,10 @@
             }
         }
 
-        annotationCanvas.addEventListener('mousedown', start, { passive: false });
-        annotationCanvas.addEventListener('mousemove', draw, { passive: false });
-        annotationCanvas.addEventListener('mouseup', stop, { passive: false });
+        transformWrapper.addEventListener('mousedown', startDrawing, true);
+        transformWrapper.addEventListener('mousemove', draw, true);
+        window.addEventListener('mouseup', stopDrawing, true);
 
-        // --- TOOLBAR LOGIC ---
         document.querySelector('.annotation-toolbar').addEventListener('click', e => {
             const btn = e.target.closest('.tool-btn');
             if (!btn) return;
@@ -376,12 +388,6 @@
                 currentTool = selectedTool;
                 btn.classList.add('active');
                 document.body.classList.add('annotation-active');
-            }
-
-            if(currentTool === ''){
-                annotationCanvas.style.pointerEvents = 'none';
-            } else {
-                annotationCanvas.style.pointerEvents = 'auto';
             }
         });
         document.getElementById('color-picker').addEventListener('input', e => { strokeColor = e.target.value; });
