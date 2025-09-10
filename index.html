@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Ielts Lessons</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <div class="container mx-auto px-4 py-12">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-blue-700">Pre-Ielts Lessons</h1>
+            <p class="text-lg mt-2 text-gray-600">Tổng hợp 36 bài giảng trọng tâm</p>
+        </header>
+
+        <main class="bg-white rounded-lg shadow-xl p-8">
+            <h2 class="text-2xl font-bold mb-6 border-b pb-3 text-gray-700">Danh sách bài học</h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- I will generate all 36 lessons here. Lesson 10 will be active. -->
+                <!-- Lesson 1-9 (Disabled) -->
+                <script>
+                    for (let i = 1; i < 10; i++) {
+                        document.write(`
+                        <div>
+                            <a href="#" class="flex items-center p-3 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed transition-all duration-200 hover:shadow-md">
+                                <svg class="w-7 h-7 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span class="font-semibold">Lesson ${i}</span>
+                            </a>
+                        </div>
+                        `);
+                    }
+                </script>
+
+                <!-- Lesson 10 (Active) -->
+                <div>
+                    <a href="lesson-10.html" class="flex items-center p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-sm hover:shadow-lg">
+                        <svg class="w-7 h-7 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.55a2.5 2.5 0 010 4M5 10v4a2 2 0 002 2h3a2 2 0 002-2v-4M5 10a2 2 0 012-2h3a2 2 0 012 2m-7 4a2 2 0 002 2h3a2 2 0 002-2"></path></svg>
+                        <span class="font-semibold text-blue-800">Lesson 10 - Listening</span>
+                    </a>
+                </div>
+
+                <!-- Lesson 11-36 (Disabled) -->
+                <script>
+                    for (let i = 11; i <= 36; i++) {
+                        document.write(`
+                        <div>
+                            <a href="#" class="flex items-center p-3 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed transition-all duration-200 hover:shadow-md">
+                                <svg class="w-7 h-7 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span class="font-semibold">Lesson ${i}</span>
+                            </a>
+                        </div>
+                        `);
+                    }
+                </script>
+            </div>
+        </main>
+
+        <footer class="text-center mt-12 text-gray-500">
+            <p>&copy; 2024 - Trang bài giảng của bạn</p>
+        </footer>
+    </div>
+</body>
+</html>
+
