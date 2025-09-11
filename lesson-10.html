@@ -11,13 +11,15 @@
 
     <style>
         :root {
-            --r-main-font-size: 28px; /* Tăng cỡ chữ mặc định */
+            --r-main-font-size: 28px;
             --r-heading1-size: 2.5em;
             --r-heading2-size: 1.8em;
             --r-heading3-size: 1.5em;
         }
         .reveal .slides section {
             text-align: left;
+            box-sizing: border-box;
+            padding: 20px 40px;
         }
         .reveal h1, .reveal h2, .reveal h3 {
             text-align: center;
@@ -33,70 +35,99 @@
             border-radius: 8px;
             background-color: #f9f9f9;
         }
-        .reveal .exercise-form table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .reveal .exercise-form td {
-            padding: 8px;
-            border: 1px solid #ddd;
-        }
-        .reveal .exercise-form td:first-child {
-            font-weight: bold;
-            width: 30%;
-        }
+        .reveal .exercise-form table { width: 100%; border-collapse: collapse; }
+        .reveal .exercise-form td { padding: 8px; border: 1px solid #ddd; }
+        .reveal .exercise-form td:first-child { font-weight: bold; width: 30%; }
 
-        /* === ANNOTATION STYLES === */
-        #annotation-canvas {
+        /* === NEW ANNOTATION STYLES === */
+        #selection-toolbar {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 10;
+            display: none;
+            background: #333;
+            border-radius: 5px;
+            padding: 5px;
+            z-index: 1000;
         }
-        body.annotation-active.pen-tool-active { cursor: crosshair; }
-        body.annotation-active.highlight-tool-active { cursor: crosshair; }
-        body.annotation-active.eraser-tool-active { cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='white' stroke='black'><rect x='4' y='4' width='16' height='16' rx='2'/></svg>") 12 12, auto; }
-        body.annotation-active.text-tool-active { cursor: text; }
+        #selection-toolbar button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            padding: 8px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        #selection-toolbar button:hover {
+            background: #555;
+        }
+        .highlighted-text {
+            background-color: rgba(255, 255, 0, 0.4);
+        }
+        .underlined-text {
+            text-decoration: underline;
+            text-decoration-color: red;
+            text-decoration-thickness: 2px;
+        }
+        .strikethrough-text {
+            text-decoration: line-through;
+        }
 
-        .annotation-toolbar {
+        #main-toolbar {
             position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: rgba(0,0,0,0.7);
             padding: 8px;
             border-radius: 8px;
-            z-index: 101;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
-        .tool-btn {
+        #main-toolbar button {
             background: #fff; color: #333; border: none;
             width: 40px; height: 40px; font-size: 18px;
             cursor: pointer; border-radius: 5px;
-            display: flex; align-items: center; justify-content: center;
         }
-        .tool-btn.active {
-            background: #007bff; color: white;
+        body.add-note-mode {
+            cursor: crosshair;
         }
-        .text-input-overlay {
-            position: fixed;
-            z-index: 102;
-            border: 1px dashed #007bff;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 5px;
-            outline: none;
-            font-family: sans-serif;
+
+        .text-note {
+            position: absolute;
+            width: 200px;
+            height: 150px;
+            background: #fffbe5;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+        }
+        .text-note-header {
+            background: #f0f0f0;
+            padding: 3px;
+            cursor: move;
+            text-align: right;
+        }
+        .text-note-header .close-btn {
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .text-note textarea {
+            flex-grow: 1;
+            border: none;
+            background: transparent;
+            padding: 10px;
             resize: none;
+            outline: none;
+            font-family: inherit;
+            font-size: 18px;
         }
     </style>
 </head>
 <body>
     <div class="reveal">
         <div class="slides">
-            
             <section>
                 <h2>LISTENING: FORM AND NOTE COMPLETION</h2>
                 <h4>Quy trình làm bài:</h4>
@@ -109,10 +140,9 @@
                     <li>Kiểm tra lại sau khi làm xong (chính tả, số ít/nhiều, ngữ pháp).</li>
                 </ol>
             </section>
-
             <section>
                 <h3>Exercise 1</h3>
-                <audio controls src="Assets/lesson-10/audio/lesson-10-ex1.mp3"></audio>
+                <audio controls src="assets/lesson-10/audio/lesson-10-ex1.mp3"></audio>
                 <p>Complete these notes with information from the flight arrivals board below.</p>
                 <ul>
                     <li>Spanish flight arrived at (1) .................</li>
@@ -122,17 +152,16 @@
                 </ul>
                 <hr>
                 <h3>Exercise 2</h3>
-                <audio controls src="Assets/lesson-10/audio/lesson-10-ex2.mp3"></audio>
+                <audio controls src="assets/lesson-10/audio/lesson-10-ex2.mp3"></audio>
                 <p>You will hear a conversation between two friends planning a visit. Complete the notes.</p>
                 <ul>
                     <li>Sam arrives at: (1) ................. on (2) .................</li>
                     <li>Airline: (3) ................. Flight number: (4) .................</li>
                 </ul>
             </section>
-
             <section>
                 <h3>Exercise 3</h3>
-                <audio controls src="Assets/lesson-10/audio/lesson-10-ex3.mp3"></audio>
+                <audio controls src="assets/lesson-10/audio/lesson-10-ex3.mp3"></audio>
                 <p>You will hear a telephone conversation in which Sam is booking a taxi. Complete the form.</p>
                 <div class="exercise-form">
                     <table>
@@ -146,10 +175,9 @@
                     </table>
                 </div>
             </section>
-
             <section>
                 <h3>Exercise 4</h3>
-                <audio controls src="Assets/lesson-10/audio/lesson-10-ex4.mp3"></audio>
+                <audio controls src="assets/lesson-10/audio/lesson-10-ex4.mp3"></audio>
                 <p>You will hear a conversation between a flight attendant and a passenger completing a landing card. Complete the form.</p>
                  <div class="exercise-form">
                     <table>
@@ -160,10 +188,9 @@
                     </table>
                 </div>
             </section>
-            
             <section>
                 <h3>Exercise 5</h3>
-                <audio controls src="Assets/lesson-10/audio/lesson-10-ex5.mp3"></audio>
+                <audio controls src="assets/lesson-10/audio/lesson-10-ex5.mp3"></audio>
                  <p>You will hear a telephone conversation between a hotel receptionist and a caller making a reservation. Complete the form.</p>
                 <div class="exercise-form">
                      <table>
@@ -177,10 +204,9 @@
                     </table>
                 </div>
             </section>
-            
             <section>
                 <h3>Exercise 8</h3>
-                 <audio controls src="Assets/lesson-10/audio/lesson-10-ex8.mp3"></audio>
+                 <audio controls src="assets/lesson-10/audio/lesson-10-ex8.mp3"></audio>
                 <p>Listen to a recording of an interview in a survey of shopping habits. Complete the notes.</p>
                 <ul>
                     <li>Four people in the family - only two (1) .................</li>
@@ -189,10 +215,9 @@
                     <li>Miriam (4) ................. most. Sometimes buys clothes she doesn't like. Takes them back and asks for (5) .................</li>
                 </ul>
             </section>
-            
             <section>
                 <h3>Exercise 9</h3>
-                 <audio controls src="Assets/lesson-10/audio/lesson-10-ex9.mp3"></audio>
+                 <audio controls src="assets/lesson-10/audio/lesson-10-ex9.mp3"></audio>
                 <p>Listen to a talk about shopping habits in different countries. Complete the notes.</p>
                 <p><b>Who does the shopping?</b></p>
                 <ul>
@@ -206,225 +231,167 @@
                     <li>In country (6) .................</li>
                 </ul>
             </section>
-
         </div>
     </div>
     
-    <canvas id="annotation-canvas"></canvas>
-    <div class="annotation-toolbar">
-        <button class="tool-btn" id="pen-tool" title="Vẽ (P)"><i class="fa-solid fa-pencil"></i></button>
-        <button class="tool-btn" id="highlight-tool" title="Highlight (H)"><i class="fa-solid fa-highlighter"></i></button>
-        <button class="tool-btn" id="text-tool" title="Viết chữ (T)"><i class="fa-solid fa-font"></i></button>
-        <button class="tool-btn" id="eraser-tool" title="Tẩy (E)"><i class="fa-solid fa-eraser"></i></button>
-        <div class="separator" style="width:1px; height:30px; background:#666; margin:0 5px;"></div>
-        <input type="color" id="color-picker" title="Chọn màu" value="#FF0000">
-        <input type="range" id="size-picker" min="2" max="50" value="5" title="Chọn cỡ bút" style="margin: 0 5px;">
-        <div class="separator" style="width:1px; height:30px; background:#666; margin:0 5px;"></div>
-        <button class="tool-btn" id="clear-tool" title="Xóa hết"><i class="fa-solid fa-trash"></i></button>
+    <div id="selection-toolbar">
+        <button id="highlight-btn" title="Highlight"><i class="fa-solid fa-highlighter"></i></button>
+        <button id="underline-btn" title="Underline"><i class="fa-solid fa-underline"></i></button>
+        <button id="strikethrough-btn" title="Strikethrough"><i class="fa-solid fa-strikethrough"></i></button>
+    </div>
+
+    <div id="main-toolbar">
+        <button id="add-note-btn" title="Thêm ghi chú"><i class="fa-solid fa-note-sticky"></i></button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.js"></script>
     <script>
         Reveal.initialize({ history: false, center: false, slideNumber: true, width: 1280, height: 960 });
 
-        const canvas = document.getElementById('annotation-canvas');
-        const ctx = canvas.getContext('2d');
-        const toolbar = document.querySelector('.annotation-toolbar');
-        
-        let currentTool = '';
-        let isDrawing = false;
-        let strokeColor = '#ff0000';
-        let brushSize = 5;
-        const savedAnnotations = new Map();
+        const selectionToolbar = document.getElementById('selection-toolbar');
+        const slidesContainer = document.querySelector('.reveal .slides');
+        const originalSlideStates = new Map();
+        const modifiedSlideStates = new Map();
 
-        function resizeCanvas() {
-            const scale = Reveal.getScale();
-            const revealEl = Reveal.getRevealElement();
-            const revealRect = revealEl.getBoundingClientRect();
+        // --- PERSISTENCE LOGIC ---
+        Reveal.on('ready', () => {
+            document.querySelectorAll('.reveal .slides section').forEach((slide, index) => {
+                originalSlideStates.set(index, slide.innerHTML);
+            });
+        });
 
-            canvas.width = revealRect.width;
-            canvas.height = revealRect.height;
-            canvas.style.top = `${revealRect.top}px`;
-            canvas.style.left = `${revealRect.left}px`;
+        Reveal.on('slidechanged', (event) => {
+            // Save previous slide state
+            const prevIndices = Reveal.getIndices(event.previousSlide);
+            const prevKey = `${prevIndices.h}-${prevIndices.v}`;
+            if (event.previousSlide) {
+                 modifiedSlideStates.set(prevKey, event.previousSlide.innerHTML);
+            }
+
+            // Load current slide state
+            const currIndices = Reveal.getIndices(event.currentSlide);
+            const currKey = `${currIndices.h}-${currIndices.v}`;
+            const originalKey = currIndices.h; // Assuming horizontal slides only for simplicity
             
-            loadAnnotations(Reveal.getIndices());
-        }
-
-        Reveal.on('ready', resizeCanvas);
-        window.addEventListener('resize', resizeCanvas);
-        Reveal.on('resize', resizeCanvas);
-
-        function getCanvasPosition(e) {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return {
-                x: clientX - rect.left,
-                y: clientY - rect.top,
-            };
-        }
-
-        function saveAnnotations(indices) {
-            if (!indices) return;
-            const key = `${indices.h}-${indices.v}`;
-            if (!isCanvasBlank(canvas)) {
-                savedAnnotations.set(key, canvas.toDataURL());
-            } else {
-                 savedAnnotations.delete(key);
+            if (modifiedSlideStates.has(currKey)) {
+                event.currentSlide.innerHTML = modifiedSlideStates.get(currKey);
+            } else if (originalSlideStates.has(originalKey)) {
+                event.currentSlide.innerHTML = originalSlideStates.get(originalKey);
             }
-        }
+        });
 
-        function loadAnnotations(indices) {
-            if (!indices) return;
-            const key = `${indices.h}-${indices.v}`;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (savedAnnotations.has(key)) {
-                const img = new Image();
-                img.src = savedAnnotations.get(key);
-                img.onload = () => ctx.drawImage(img, 0, 0);
+        // --- SELECTION TOOLBAR LOGIC ---
+        document.addEventListener('mouseup', (e) => {
+            if (e.target.closest('#selection-toolbar')) return;
+
+            const selection = window.getSelection();
+            if (selection.toString().trim().length > 0) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                
+                selectionToolbar.style.left = `${rect.left + window.scrollX + rect.width / 2 - selectionToolbar.offsetWidth / 2}px`;
+                selectionToolbar.style.top = `${rect.top + window.scrollY - selectionToolbar.offsetHeight - 10}px`;
+                selectionToolbar.style.display = 'block';
+            } else {
+                selectionToolbar.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('mousedown', (e) => {
+             if (!e.target.closest('#selection-toolbar')) {
+                selectionToolbar.style.display = 'none';
+             }
+        });
+
+        function applyStyle(className) {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const span = document.createElement('span');
+                span.className = className;
+                
+                try {
+                    // Check if selection contains elements with the same class to "unwrap" them
+                    const container = range.commonAncestorContainer;
+                    const parentElement = container.nodeType === 3 ? container.parentNode : container;
+                    if (parentElement.classList.contains(className)) {
+                        const text = document.createTextNode(parentElement.textContent);
+                        parentElement.parentNode.replaceChild(text, parentElement);
+                    } else {
+                         range.surroundContents(span);
+                    }
+                } catch (e) {
+                     console.error("Could not surround contents:", e);
+                }
+
+                selection.removeAllRanges();
+                selectionToolbar.style.display = 'none';
             }
         }
         
-        function isCanvasBlank(c) {
-            return !c.getContext('2d').getImageData(0, 0, c.width, c.height).data.some(channel => channel !== 0);
-        }
+        document.getElementById('highlight-btn').addEventListener('click', () => applyStyle('highlighted-text'));
+        document.getElementById('underline-btn').addEventListener('click', () => applyStyle('underlined-text'));
+        document.getElementById('strikethrough-btn').addEventListener('click', () => applyStyle('strikethrough-text'));
 
-        Reveal.on('slidechanged', event => {
-            saveAnnotations(Reveal.getIndices(event.previousSlide));
-            loadAnnotations(Reveal.getIndices(event.currentSlide));
-        });
+        // --- TEXT NOTE LOGIC ---
+        const addNoteBtn = document.getElementById('add-note-btn');
+        addNoteBtn.addEventListener('click', () => {
+            document.body.classList.add('add-note-mode');
+            const currentSlide = Reveal.getCurrentSlide();
+            
+            const placeNoteHandler = (e) => {
+                const slideRect = currentSlide.getBoundingClientRect();
+                const x = e.clientX - slideRect.left;
+                const y = e.clientY - slideRect.top;
+                createNote(currentSlide, x, y);
 
-        function start(e) {
-            if (currentTool === '' || currentTool === 'text') return;
-            e.preventDefault();
-            isDrawing = true;
-            const pos = getCanvasPosition(e);
-            ctx.beginPath();
-            ctx.moveTo(pos.x, pos.y);
-        }
-
-        function draw(e) {
-            if (!isDrawing) return;
-            e.preventDefault();
-            const pos = getCanvasPosition(e);
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            const scale = Reveal.getScale();
-
-            switch (currentTool) {
-                case 'pen':
-                    ctx.globalCompositeOperation = 'source-over';
-                    ctx.strokeStyle = strokeColor;
-                    ctx.lineWidth = brushSize / scale;
-                    break;
-                case 'highlight':
-                    ctx.globalCompositeOperation = 'source-over';
-                    ctx.strokeStyle = 'rgba(255, 255, 0, 0.4)';
-                    ctx.lineWidth = (brushSize * 5) / scale; // Highlighter is thicker
-                    break;
-                case 'eraser':
-                    ctx.globalCompositeOperation = 'destination-out';
-                    ctx.lineWidth = (brushSize * 4) / scale; // Eraser is thicker
-                    break;
-            }
-            ctx.lineTo(pos.x, pos.y);
-            ctx.stroke();
-        }
-
-        function stop(e) {
-            if (!isDrawing) return;
-            e.preventDefault();
-            isDrawing = false;
-        }
-
-        // Text tool logic
-        function handleTextToolClick(e) {
-            if (currentTool !== 'text') return;
-            const pos = getCanvasPosition(e);
-            createTextInput(pos, e.clientX, e.clientY);
-        }
-
-        function createTextInput(canvasPos, clientX, clientY) {
-            const textarea = document.createElement('textarea');
-            textarea.className = 'text-input-overlay';
-            const scale = Reveal.getScale();
-            textarea.style.left = `${clientX}px`;
-            textarea.style.top = `${clientY}px`;
-            textarea.style.fontSize = `${24 * scale}px`; // Adjust font size with scale
-            textarea.style.color = strokeColor;
-
-            document.body.appendChild(textarea);
-            textarea.focus();
-
-            const finishText = () => {
-                drawText(textarea.value, canvasPos.x, canvasPos.y);
-                document.body.removeChild(textarea);
+                document.body.classList.remove('add-note-mode');
+                currentSlide.removeEventListener('click', placeNoteHandler);
             };
+            currentSlide.addEventListener('click', placeNoteHandler, { once: true });
+        });
 
-            textarea.addEventListener('blur', finishText);
-            textarea.addEventListener('keydown', e => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    finishText();
+        function createNote(parent, x, y, content = '') {
+            const note = document.createElement('div');
+            note.className = 'text-note';
+            note.style.left = `${x}px`;
+            note.style.top = `${y}px`;
+
+            note.innerHTML = `
+                <div class="text-note-header">
+                    <button class="close-btn">&times;</button>
+                </div>
+                <textarea>${content}</textarea>
+            `;
+            parent.appendChild(note);
+
+            // Drag logic
+            const header = note.querySelector('.text-note-header');
+            let isDragging = false;
+            let offsetX, offsetY;
+
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                offsetX = e.clientX - note.getBoundingClientRect().left;
+                offsetY = e.clientY - note.getBoundingClientRect().top;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const slideRect = parent.getBoundingClientRect();
+                    note.style.left = `${e.clientX - slideRect.left - offsetX}px`;
+                    note.style.top = `${e.clientY - slideRect.top - offsetY}px`;
                 }
             });
-        }
 
-        function drawText(text, x, y) {
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.fillStyle = strokeColor;
-            const scale = Reveal.getScale();
-            const fontSize = 24 * scale;
-            ctx.font = `${fontSize}px sans-serif`;
-            const lines = text.split('\n');
-            lines.forEach((line, index) => {
-                ctx.fillText(line, x, y + (index * fontSize * 1.2));
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            note.querySelector('.close-btn').addEventListener('click', () => {
+                note.remove();
             });
         }
-
-        canvas.addEventListener('mousedown', start, { passive: false });
-        canvas.addEventListener('mousemove', draw, { passive: false });
-        window.addEventListener('mouseup', stop, { passive: false });
-        canvas.addEventListener('click', handleTextToolClick);
-
-
-        toolbar.addEventListener('click', e => {
-            const btn = e.target.closest('.tool-btn');
-            if (!btn) return;
-
-            const selectedTool = btn.id.replace('-tool', '');
-
-            if (selectedTool === 'clear') {
-                if (confirm('Bạn có chắc muốn xóa hết chú thích trên slide này?')) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                }
-                return;
-            }
-
-            // Remove active state from body and buttons
-            document.body.className = document.body.className.replace(/\S+-tool-active\s?/, '');
-            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-
-            if (currentTool === selectedTool) {
-                currentTool = '';
-                canvas.style.pointerEvents = 'none';
-                document.body.classList.remove('annotation-active');
-            } else {
-                currentTool = selectedTool;
-                btn.classList.add('active');
-                document.body.classList.add('annotation-active');
-                document.body.classList.add(`${currentTool}-tool-active`);
-                canvas.style.pointerEvents = 'auto';
-            }
-        });
-        
-        document.getElementById('color-picker').addEventListener('input', e => {
-            strokeColor = e.target.value;
-        });
-        document.getElementById('size-picker').addEventListener('input', e => {
-            brushSize = e.target.value;
-        });
-
     </script>
 </body>
 </html>
