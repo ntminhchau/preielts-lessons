@@ -4,297 +4,215 @@
     <meta charset="utf-8">
     <title>Lesson 10 - Listening</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/white.min.css" id="theme">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 
     <style>
-        :root {
-            --r-main-font-size: 28px;
-            --r-heading1-size: 2.5em;
-            --r-heading2-size: 1.8em;
-            --r-heading3-size: 1.5em;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            font-size: 22px;
+            color: #333;
+            background-color: #fdfdfd;
+            margin: 0;
+            padding: 0;
         }
-        .reveal .slides section {
-            text-align: left;
-            box-sizing: border-box;
+        #content-container {
+            max-width: 1000px;
+            margin: 40px auto;
             padding: 20px 40px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
-        .reveal h1, .reveal h2, .reveal h3 {
+        h2, h3, h4 {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 1em;
+            color: #111;
         }
-        .reveal audio {
+        h2 { font-size: 2.2em; }
+        h3 { font-size: 1.8em; }
+        audio {
             width: 100%;
-            margin: 15px 0;
+            margin: 20px 0;
         }
-        .reveal .exercise-form {
+        .exercise-form {
             border: 1px solid #ccc;
             padding: 20px;
             border-radius: 8px;
             background-color: #f9f9f9;
+            margin-top: 20px;
         }
-        .reveal .exercise-form table { width: 100%; border-collapse: collapse; }
-        .reveal .exercise-form td { padding: 8px; border: 1px solid #ddd; }
-        .reveal .exercise-form td:first-child { font-weight: bold; width: 30%; }
+        .exercise-form table { width: 100%; border-collapse: collapse; }
+        .exercise-form td { padding: 10px; border: 1px solid #ddd; }
+        .exercise-form td:first-child { font-weight: bold; width: 30%; }
+        hr { margin: 40px 0; border: 0; border-top: 1px solid #eee; }
 
-        /* === NEW ANNOTATION STYLES === */
+        /* === NEW INPUT STYLES === */
+        .fill-in-blank {
+            border: none;
+            border-bottom: 1px solid #555;
+            background-color: #f0f8ff;
+            text-align: center;
+            font-size: inherit;
+            font-family: inherit;
+            color: #005a9c;
+            width: 200px;
+            margin: 0 5px;
+            padding: 2px;
+        }
+        .fill-in-blank:focus {
+            outline: none;
+            border-bottom: 2px solid #007bff;
+            background-color: #e6f7ff;
+        }
+
+
+        /* === ANNOTATION STYLES === */
+        .highlighted-text { background-color: rgba(255, 255, 0, 0.4); }
+        .underlined-text { text-decoration: underline; text-decoration-color: #e63946; text-decoration-thickness: 3px; }
+        .strikethrough-text { text-decoration: line-through; }
+
         #selection-toolbar {
-            position: absolute;
-            display: none;
-            background: #333;
-            border-radius: 5px;
-            padding: 5px;
-            z-index: 1000;
+            position: absolute; display: none; background: #333;
+            border-radius: 5px; padding: 5px; z-index: 1000;
         }
         #selection-toolbar button {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 16px;
-            padding: 8px 10px;
-            cursor: pointer;
-            border-radius: 3px;
+            background: none; border: none; color: white;
+            font-size: 16px; padding: 8px 10px; cursor: pointer;
+            border-radius: 3px; min-width: 40px;
         }
-        #selection-toolbar button:hover {
-            background: #555;
-        }
-        .highlighted-text {
-            background-color: rgba(255, 255, 0, 0.4);
-        }
-        .underlined-text {
-            text-decoration: underline;
-            text-decoration-color: red;
-            text-decoration-thickness: 2px;
-        }
-        .strikethrough-text {
-            text-decoration: line-through;
-        }
+        #selection-toolbar button:hover { background: #555; }
 
         #main-toolbar {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1001;
-            background: rgba(0,0,0,0.7);
-            padding: 8px;
-            border-radius: 8px;
+            position: fixed; top: 20px; left: 20px; z-index: 1001;
+            background: rgba(0,0,0,0.7); padding: 8px; border-radius: 8px;
         }
         #main-toolbar button {
             background: #fff; color: #333; border: none;
             width: 40px; height: 40px; font-size: 18px;
             cursor: pointer; border-radius: 5px;
         }
-        body.add-note-mode {
-            cursor: crosshair;
-        }
+        body.add-note-mode { cursor: crosshair; }
 
         .text-note {
-            position: absolute;
-            width: 200px;
-            height: 150px;
-            background: #fffbe5;
-            border: 1px solid #ccc;
-            box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
-            z-index: 999;
-            display: flex;
-            flex-direction: column;
+            position: absolute; z-index: 999; border: 1px dashed transparent;
         }
-        .text-note-header {
-            background: #f0f0f0;
-            padding: 3px;
-            cursor: move;
-            text-align: right;
+        .text-note:hover { border-color: #ccc; }
+        .text-note:hover .note-controls { display: flex; }
+        .note-controls {
+            position: absolute; top: -15px; right: 0; display: none;
+            gap: 8px; align-items: center;
         }
-        .text-note-header .close-btn {
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        .note-controls .drag-handle { cursor: move; color: #555; }
+        .note-controls .close-btn { cursor: pointer; border: none; background: none; font-size: 16px; }
         .text-note textarea {
-            flex-grow: 1;
-            border: none;
-            background: transparent;
-            padding: 10px;
-            resize: none;
-            outline: none;
-            font-family: inherit;
-            font-size: 18px;
+            width: 300px; height: 100px; border: none; background: transparent;
+            padding: 5px; resize: both; outline: none;
+            font-family: inherit; font-size: 20px;
+            color: #c92a2a; font-style: italic;
         }
     </style>
 </head>
 <body>
-    <div class="reveal">
-        <div class="slides">
-            <section>
-                <h2>LISTENING: FORM AND NOTE COMPLETION</h2>
-                <h4>Quy trình làm bài:</h4>
-                <ol>
-                    <li>Đọc kỹ hướng dẫn (Vd: Write NO MORE THAN TWO WORDS...).</li>
-                    <li>Xác định cần điền TỪ hay SỐ.</li>
-                    <li>Xác định loại từ cần điền (danh từ, động từ, tính từ...).</li>
-                    <li>Nghe được – điền ngay vào bài.</li>
-                    <li>Nghe nhưng chưa chắc – ghi lại dữ kiện nghe được.</li>
-                    <li>Kiểm tra lại sau khi làm xong (chính tả, số ít/nhiều, ngữ pháp).</li>
-                </ol>
-            </section>
-            <section>
-                <h3>Exercise 1</h3>
-                <audio controls src="assets/lesson-10/audio/lesson-10-ex1.mp3"></audio>
-                <p>Complete these notes with information from the flight arrivals board below.</p>
-                <ul>
-                    <li>Spanish flight arrived at (1) .................</li>
-                    <li>Flight CCA1550 from (2) ................. arrived at 6.00</li>
-                    <li>Emirati flight no. (3) ................. delayed.</li>
-                    <li>Flight from Lison landed at terminal (4) .................</li>
-                </ul>
-                <hr>
-                <h3>Exercise 2</h3>
-                <audio controls src="assets/lesson-10/audio/lesson-10-ex2.mp3"></audio>
-                <p>You will hear a conversation between two friends planning a visit. Complete the notes.</p>
-                <ul>
-                    <li>Sam arrives at: (1) ................. on (2) .................</li>
-                    <li>Airline: (3) ................. Flight number: (4) .................</li>
-                </ul>
-            </section>
-            <section>
-                <h3>Exercise 3</h3>
-                <audio controls src="assets/lesson-10/audio/lesson-10-ex3.mp3"></audio>
-                <p>You will hear a telephone conversation in which Sam is booking a taxi. Complete the form.</p>
-                <div class="exercise-form">
-                    <table>
-                        <tr><td>NAME OF PASSENGER:</td><td>SAM WILLIAMS</td></tr>
-                        <tr><td>PICK-UP DATE AND TIME:</td><td>Wed 6th July (1).................</td></tr>
-                        <tr><td>PICK-UP POINT:</td><td>(2)................. WILLOWSIDE BANK</td></tr>
-                        <tr><td>NO. & STREET:</td><td>(3).................</td></tr>
-                        <tr><td>TOWN:</td><td>(4).................</td></tr>
-                        <tr><td>POSTCODE:</td><td>(5) 07789 .................</td></tr>
-                        <tr><td>DESTINATION:</td><td>HEATHROW - TERMINAL 5</td></tr>
-                    </table>
-                </div>
-            </section>
-            <section>
-                <h3>Exercise 4</h3>
-                <audio controls src="assets/lesson-10/audio/lesson-10-ex4.mp3"></audio>
-                <p>You will hear a conversation between a flight attendant and a passenger completing a landing card. Complete the form.</p>
-                 <div class="exercise-form">
-                    <table>
-                        <tr><td>Family name:</td><td>LIU</td></tr>
-                        <tr><td>First name(s):</td><td>(1) .................</td></tr>
-                        <tr><td>Date of birth:</td><td>(2) .................</td></tr>
-                        <tr><td>Contact address in the UK:</td><td>(3) .................</td></tr>
-                    </table>
-                </div>
-            </section>
-            <section>
-                <h3>Exercise 5</h3>
-                <audio controls src="assets/lesson-10/audio/lesson-10-ex5.mp3"></audio>
-                 <p>You will hear a telephone conversation between a hotel receptionist and a caller making a reservation. Complete the form.</p>
-                <div class="exercise-form">
-                     <table>
-                        <tr><td>Type of room:</td><td>(1) Single / Double - twin beds / Double - king-sized bed</td></tr>
-                        <tr><td>Name:</td><td>(2) .................</td></tr>
-                        <tr><td>Home address:</td><td>(3) ................. Avenue, Cambridge</td></tr>
-                         <tr><td>Postcode:</td><td>(4) .................</td></tr>
-                         <tr><td>Transport:</td><td>(5) .................</td></tr>
-                         <tr><td>Meals:</td><td>(6) .................</td></tr>
-                         <tr><td>Date of arrival:</td><td>(7) .................</td></tr>
-                    </table>
-                </div>
-            </section>
-            <section>
-                <h3>Exercise 8</h3>
-                 <audio controls src="assets/lesson-10/audio/lesson-10-ex8.mp3"></audio>
-                <p>Listen to a recording of an interview in a survey of shopping habits. Complete the notes.</p>
-                <ul>
-                    <li>Four people in the family - only two (1) .................</li>
-                    <li>Mother buys the food. Makes a (2) ................. first.</li>
-                    <li>Goes to (3) ................. weekly.</li>
-                    <li>Miriam (4) ................. most. Sometimes buys clothes she doesn't like. Takes them back and asks for (5) .................</li>
-                </ul>
-            </section>
-            <section>
-                <h3>Exercise 9</h3>
-                 <audio controls src="assets/lesson-10/audio/lesson-10-ex9.mp3"></audio>
-                <p>Listen to a talk about shopping habits in different countries. Complete the notes.</p>
-                <p><b>Who does the shopping?</b></p>
-                <ul>
-                    <li>In the UK (1) ................. % food bought by women.</li>
-                    <li>In some countries (2) ................. % men do grocery shopping.</li>
-                    <li>Habits changing - US (3) ................. % of men shop for food.</li>
-                </ul>
-                 <p><b>Where do people shop?</b></p>
-                 <ul>
-                    <li>In cities: (4) ................. and (5) .................</li>
-                    <li>In country (6) .................</li>
-                </ul>
-            </section>
-        </div>
+    <div id="main-toolbar">
+        <button id="add-note-btn" title="Thêm ghi chú"><i class="fa-solid fa-font"></i></button>
     </div>
-    
+
     <div id="selection-toolbar">
         <button id="highlight-btn" title="Highlight"><i class="fa-solid fa-highlighter"></i></button>
         <button id="underline-btn" title="Underline"><i class="fa-solid fa-underline"></i></button>
         <button id="strikethrough-btn" title="Strikethrough"><i class="fa-solid fa-strikethrough"></i></button>
+        <button id="clear-format-btn" title="Xóa định dạng"><i class="fa-solid fa-text-slash"></i></button>
     </div>
 
-    <div id="main-toolbar">
-        <button id="add-note-btn" title="Thêm ghi chú"><i class="fa-solid fa-note-sticky"></i></button>
+    <div id="content-container">
+        <h2>LISTENING: FORM AND NOTE COMPLETION</h2>
+        <h4>Quy trình làm bài:</h4>
+        <ol>
+            <li>Đọc kỹ hướng dẫn (Vd: Write NO MORE THAN TWO WORDS...).</li>
+            <li>Xác định cần điền TỪ hay SỐ.</li>
+            <li>Xác định loại từ cần điền (danh từ, động từ, tính từ...).</li>
+            <li>Nghe được – điền ngay vào bài.</li>
+            <li>Nghe nhưng chưa chắc – ghi lại dữ kiện nghe được.</li>
+            <li>Kiểm tra lại sau khi làm xong (chính tả, số ít/nhiều, ngữ pháp).</li>
+        </ol>
+
+        <hr>
+
+        <h3>Exercise 1</h3>
+        <audio controls src="assets/lesson-10/audio/lesson-10-ex1.mp3"></audio>
+        <p>Complete these notes with information from the flight arrivals board below.</p>
+        <ul>
+            <li>Spanish flight arrived at (1) <input type="text" class="fill-in-blank"></li>
+            <li>Flight CCA1550 from (2) <input type="text" class="fill-in-blank"> arrived at 6.00</li>
+            <li>Emirati flight no. (3) <input type="text" class="fill-in-blank"> delayed.</li>
+            <li>Flight from Lison landed at terminal (4) <input type="text" class="fill-in-blank"></li>
+        </ul>
+
+        <hr>
+
+        <h3>Exercise 2</h3>
+        <audio controls src="assets/lesson-10/audio/lesson-10-ex2.mp3"></audio>
+        <p>You will hear a conversation between two friends planning a visit. Complete the notes.</p>
+        <ul>
+            <li>Sam arrives at: (1) <input type="text" class="fill-in-blank"> on (2) <input type="text" class="fill-in-blank"></li>
+            <li>Airline: (3) <input type="text" class="fill-in-blank"> Flight number: (4) <input type="text" class="fill-in-blank"></li>
+        </ul>
+
+        <hr>
+
+        <h3>Exercise 3</h3>
+        <audio controls src="assets/lesson-10/audio/lesson-10-ex3.mp3"></audio>
+        <p>You will hear a telephone conversation in which Sam is booking a taxi. Complete the form.</p>
+        <div class="exercise-form">
+            <table>
+                <tr><td>NAME OF PASSENGER:</td><td>SAM WILLIAMS</td></tr>
+                <tr><td>PICK-UP DATE AND TIME:</td><td>Wed 6th July (1) <input type="text" class="fill-in-blank"></td></tr>
+                <tr><td>PICK-UP POINT:</td><td>(2) <input type="text" class="fill-in-blank"> WILLOWSIDE BANK</td></tr>
+                <tr><td>NO. & STREET:</td><td>(3) <input type="text" class="fill-in-blank"></td></tr>
+                <tr><td>TOWN:</td><td>(4) <input type="text" class="fill-in-blank"></td></tr>
+                <tr><td>POSTCODE:</td><td>(5) 07789 <input type="text" class="fill-in-blank" style="width: 150px;"></td></tr>
+                <tr><td>DESTINATION:</td><td>HEATHROW - TERMINAL 5</td></tr>
+            </table>
+        </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.js"></script>
     <script>
-        Reveal.initialize({ history: false, center: false, slideNumber: true, width: 1280, height: 960 });
-
+        const contentContainer = document.getElementById('content-container');
         const selectionToolbar = document.getElementById('selection-toolbar');
-        const slidesContainer = document.querySelector('.reveal .slides');
-        const originalSlideStates = new Map();
-        const modifiedSlideStates = new Map();
+        const addNoteBtn = document.getElementById('add-note-btn');
 
-        // --- PERSISTENCE LOGIC ---
-        Reveal.on('ready', () => {
-            document.querySelectorAll('.reveal .slides section').forEach((slide, index) => {
-                originalSlideStates.set(index, slide.innerHTML);
+        // --- PERSISTENCE ---
+        function saveState() {
+            // Update input values before saving content
+            contentContainer.querySelectorAll('.fill-in-blank').forEach(input => {
+                input.setAttribute('value', input.value);
             });
-        });
+            localStorage.setItem('lesson10_content', contentContainer.innerHTML);
+        }
 
-        Reveal.on('slidechanged', (event) => {
-            // Save previous slide state
-            const prevIndices = Reveal.getIndices(event.previousSlide);
-            const prevKey = `${prevIndices.h}-${prevIndices.v}`;
-            if (event.previousSlide) {
-                 modifiedSlideStates.set(prevKey, event.previousSlide.innerHTML);
+        function loadState() {
+            const savedContent = localStorage.getItem('lesson10_content');
+            if (savedContent) {
+                contentContainer.innerHTML = savedContent;
             }
-
-            // Load current slide state
-            const currIndices = Reveal.getIndices(event.currentSlide);
-            const currKey = `${currIndices.h}-${currIndices.v}`;
-            const originalKey = currIndices.h; // Assuming horizontal slides only for simplicity
-            
-            if (modifiedSlideStates.has(currKey)) {
-                event.currentSlide.innerHTML = modifiedSlideStates.get(currKey);
-            } else if (originalSlideStates.has(originalKey)) {
-                event.currentSlide.innerHTML = originalSlideStates.get(originalKey);
-            }
-        });
-
+        }
+        
         // --- SELECTION TOOLBAR LOGIC ---
         document.addEventListener('mouseup', (e) => {
             if (e.target.closest('#selection-toolbar')) return;
-
-            const selection = window.getSelection();
-            if (selection.toString().trim().length > 0) {
-                const range = selection.getRangeAt(0);
-                const rect = range.getBoundingClientRect();
-                
-                selectionToolbar.style.left = `${rect.left + window.scrollX + rect.width / 2 - selectionToolbar.offsetWidth / 2}px`;
-                selectionToolbar.style.top = `${rect.top + window.scrollY - selectionToolbar.offsetHeight - 10}px`;
-                selectionToolbar.style.display = 'block';
-            } else {
-                selectionToolbar.style.display = 'none';
-            }
+            setTimeout(() => {
+                const selection = window.getSelection();
+                if (selection && selection.toString().trim().length > 0) {
+                    const range = selection.getRangeAt(0);
+                    const rect = range.getBoundingClientRect();
+                    selectionToolbar.style.left = `${rect.left + window.scrollX + rect.width / 2 - selectionToolbar.offsetWidth / 2}px`;
+                    selectionToolbar.style.top = `${rect.bottom + window.scrollY + 10}px`;
+                    selectionToolbar.style.display = 'block';
+                } else {
+                    selectionToolbar.style.display = 'none';
+                }
+            }, 10);
         });
 
         document.addEventListener('mousedown', (e) => {
@@ -302,96 +220,113 @@
                 selectionToolbar.style.display = 'none';
              }
         });
-
-        function applyStyle(className) {
+        
+        function styleSelection(className) {
             const selection = window.getSelection();
-            if (selection.rangeCount > 0) {
-                const range = selection.getRangeAt(0);
+            if (!selection.rangeCount || selection.isCollapsed) return;
+            const range = selection.getRangeAt(0);
+            const parentElement = range.commonAncestorContainer.nodeType === 3 ? range.commonAncestorContainer.parentNode : range.commonAncestorContainer;
+            if (parentElement.classList.contains(className)) {
+                 parentElement.replaceWith(...parentElement.childNodes);
+            } else {
                 const span = document.createElement('span');
                 span.className = className;
-                
                 try {
-                    // Check if selection contains elements with the same class to "unwrap" them
-                    const container = range.commonAncestorContainer;
-                    const parentElement = container.nodeType === 3 ? container.parentNode : container;
-                    if (parentElement.classList.contains(className)) {
-                        const text = document.createTextNode(parentElement.textContent);
-                        parentElement.parentNode.replaceChild(text, parentElement);
-                    } else {
-                         range.surroundContents(span);
-                    }
-                } catch (e) {
-                     console.error("Could not surround contents:", e);
-                }
-
-                selection.removeAllRanges();
-                selectionToolbar.style.display = 'none';
+                    const fragment = range.extractContents();
+                    span.appendChild(fragment);
+                    range.insertNode(span);
+                } catch(e) { console.error("Wrapping failed", e); }
             }
+            selection.removeAllRanges();
+            selectionToolbar.style.display = 'none';
+            saveState();
         }
         
-        document.getElementById('highlight-btn').addEventListener('click', () => applyStyle('highlighted-text'));
-        document.getElementById('underline-btn').addEventListener('click', () => applyStyle('underlined-text'));
-        document.getElementById('strikethrough-btn').addEventListener('click', () => applyStyle('strikethrough-text'));
+        function clearFormatting() {
+            const selection = window.getSelection();
+            if (!selection.rangeCount || selection.isCollapsed) return;
+            const range = selection.getRangeAt(0);
+            const fragment = range.extractContents();
+            const spans = fragment.querySelectorAll('.highlighted-text, .underlined-text, .strikethrough-text');
+            spans.forEach(span => { span.replaceWith(...span.childNodes); });
+            range.insertNode(fragment);
+            selection.removeAllRanges();
+            selectionToolbar.style.display = 'none';
+            saveState();
+        }
+        
+        document.getElementById('highlight-btn').addEventListener('click', () => styleSelection('highlighted-text'));
+        document.getElementById('underline-btn').addEventListener('click', () => styleSelection('underlined-text'));
+        document.getElementById('strikethrough-btn').addEventListener('click', () => styleSelection('strikethrough-text'));
+        document.getElementById('clear-format-btn').addEventListener('click', clearFormatting);
 
         // --- TEXT NOTE LOGIC ---
-        const addNoteBtn = document.getElementById('add-note-btn');
         addNoteBtn.addEventListener('click', () => {
             document.body.classList.add('add-note-mode');
-            const currentSlide = Reveal.getCurrentSlide();
-            
             const placeNoteHandler = (e) => {
-                const slideRect = currentSlide.getBoundingClientRect();
-                const x = e.clientX - slideRect.left;
-                const y = e.clientY - slideRect.top;
-                createNote(currentSlide, x, y);
-
+                const x = e.pageX;
+                const y = e.pageY;
+                createNote(x, y);
                 document.body.classList.remove('add-note-mode');
-                currentSlide.removeEventListener('click', placeNoteHandler);
             };
-            currentSlide.addEventListener('click', placeNoteHandler, { once: true });
+            setTimeout(() => { document.addEventListener('click', placeNoteHandler, { once: true }); }, 0);
         });
 
-        function createNote(parent, x, y, content = '') {
+        function createNote(x, y, content = '') {
             const note = document.createElement('div');
             note.className = 'text-note';
             note.style.left = `${x}px`;
             note.style.top = `${y}px`;
-
             note.innerHTML = `
-                <div class="text-note-header">
-                    <button class="close-btn">&times;</button>
+                <div class="note-controls">
+                    <span class="drag-handle" title="Di chuyển"><i class="fa-solid fa-arrows-up-down-left-right"></i></span>
+                    <button class="close-btn" title="Xóa">&times;</button>
                 </div>
-                <textarea>${content}</textarea>
+                <textarea placeholder="Gõ ghi chú...">${content}</textarea>
             `;
-            parent.appendChild(note);
+            document.body.appendChild(note);
 
-            // Drag logic
-            const header = note.querySelector('.text-note-header');
-            let isDragging = false;
-            let offsetX, offsetY;
+            const textarea = note.querySelector('textarea');
+            textarea.addEventListener('input', saveState);
+            textarea.focus();
+
+            const header = note.querySelector('.drag-handle');
+            let isDragging = false, offsetX, offsetY;
 
             header.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
                 isDragging = true;
-                offsetX = e.clientX - note.getBoundingClientRect().left;
-                offsetY = e.clientY - note.getBoundingClientRect().top;
+                offsetX = e.pageX - note.getBoundingClientRect().left - window.scrollX;
+                offsetY = e.pageY - note.getBoundingClientRect().top - window.scrollY;
             });
-
             document.addEventListener('mousemove', (e) => {
                 if (isDragging) {
-                    const slideRect = parent.getBoundingClientRect();
-                    note.style.left = `${e.clientX - slideRect.left - offsetX}px`;
-                    note.style.top = `${e.clientY - slideRect.top - offsetY}px`;
+                    note.style.left = `${e.pageX - offsetX}px`;
+                    note.style.top = `${e.pageY - offsetY}px`;
                 }
             });
-
             document.addEventListener('mouseup', () => {
-                isDragging = false;
+                if(isDragging) {
+                    isDragging = false;
+                    saveState();
+                }
             });
-
-            note.querySelector('.close-btn').addEventListener('click', () => {
+            note.querySelector('.close-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
                 note.remove();
+                saveState();
             });
         }
+        
+        // Initial load and setup listeners
+        loadState();
+        // Add event listeners for inputs to save on change
+        contentContainer.addEventListener('input', (e) => {
+            if (e.target.classList.contains('fill-in-blank')) {
+                saveState();
+            }
+        });
+
     </script>
 </body>
 </html>
