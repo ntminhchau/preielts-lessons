@@ -183,193 +183,299 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.js"></script>
-    <script>
-        Reveal.initialize({ history: false });
+<script>
+    Reveal.initialize({ history: false });
 
-        const imageTransforms = new Map();
+    const imageTransforms = new Map();
 
-        function applyTransform(image, transform) {
-            if (!image) return;
-            const t = transform || { scale: 1, x: 0, y: 0 };
-            image.style.transform = `scale(${t.scale}) translate(${t.x}px, ${t.y}px)`;
-        }
+    function applyTransform(image, transform) {
+        if (!image) return;
+        const t = transform || { scale: 1, x: 0, y: 0 };
+        image.style.transform = `scale(${t.scale}) translate(${t.x}px, ${t.y}px)`;
+    }
 
-        function getCurrentSlideImage() {
-            const currentSlide = Reveal.getCurrentSlide();
-            return currentSlide ? currentSlide.querySelector('.zoomable-bg') : null;
+    function getCurrentSlideImage() {
+        const currentSlide = Reveal.getCurrentSlide();
+        return currentSlide ? currentSlide.querySelector('.zoomable-bg') : null;
+    }
+
+    function resetCurrentZoom() {
+        const image = getCurrentSlideImage();
+        if(image) {
+            const key = image.src;
+            const transform = { scale: 1, x: 0, y: 0 };
+            imageTransforms.set(key, transform);
+            applyTransform(image, transform);
         }
-        
-        function resetCurrentZoom() {
-             const image = getCurrentSlideImage();
-             if(image) {
-                const key = image.src;
-                const transform = { scale: 1, x: 0, y: 0 };
-                imageTransforms.set(key, transform);
-                applyTransform(image, transform);
-             }
+    }
+
+    // === ZOOM & PAN ===
+    document.getElementById('zoom-in-btn').addEventListener('click', () => {
+        const image = getCurrentSlideImage();
+        if (!image) return;
+        const key = image.src;
+        const t = imageTransforms.get(key) || { scale: 1, x: 0, y: 0 };
+        t.scale *= 1.2;
+        imageTransforms.set(key, t);
+        applyTransform(image, t);
+    });
+
+    document.getElementById('zoom-out-btn').addEventListener('click', () => {
+        const image = getCurrentSlideImage();
+        if (!image) return;
+        const key = image.src;
+        const t = imageTransforms.get(key) || { scale: 1, x: 0, y: 0 };
+        t.scale /= 1.2;
+        imageTransforms.set(key, t);
+        applyTransform(image, t);
+    });
+
+    document.getElementById('zoom-reset-btn').addEventListener('click', resetCurrentZoom);
+
+    let isPanning = false;
+    let startPanX, startPanY;
+
+    Reveal.getRevealElement().addEventListener('mousedown', (e) => {
+        const image = getCurrentSlideImage();
+        if (e.target === image) {
+            const t = imageTransforms.get(image.src) || { scale: 1, x: 0, y: 0 };
+            if (t.scale > 1) {
+                isPanning = true;
+                startPanX = e.clientX - t.x * t.scale;
+                startPanY = e.clientY - t.y * t.scale;
+                image.style.transition = 'none';
+            }
         }
-        
-        // === LOGIC CHO ZOOM & PAN ===
-        document.getElementById('zoom-in-btn').addEventListener('click', () => {
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (isPanning) {
             const image = getCurrentSlideImage();
             if (!image) return;
             const key = image.src;
-            const t = imageTransforms.get(key) || { scale: 1, x: 0, y: 0 };
-            t.scale *= 1.2;
+            const t = imageTransforms.get(key);
+            t.x = (e.clientX - startPanX) / t.scale;
+            t.y = (e.clientY - startPanY) / t.scale;
+            imageTransforms.set(key, t);
             applyTransform(image, t);
-        });
+        }
+    });
 
-        document.getElementById('zoom-out-btn').addEventListener('click', () => {
+    window.addEventListener('mouseup', () => {
+        if (isPanning) {
             const image = getCurrentSlideImage();
-            if (!image) return;
-            const key = image.src;
-            const t = imageTransforms.get(key) || { scale: 1, x: 0, y: 0 };
-            t.scale /= 1.2;
-            applyTransform(image, t);
+            if(image) image.style.transition = 'transform 0.2s ease';
+            isPanning = false;
+        }
+    });
+
+
+    // === ANNOTATION ===
+    const canvas = document.getElementById('annotation-canvas');
+    const ctx = canvas.getContext('2d');
+    const toolbar = document.querySelector('.annotation-toolbar');
+    
+    let currentTool = '';
+    let isDrawing = false;
+    let strokeColor = '#ff0000';
+    const savedAnnotations = new Map();
+    let startX, startY;
+
+    function resizeCanvas() {
+        const { width, height } = Reveal.getComputedSlideSize();
+        canvas.width = width;
+        canvas.height = height;
+
+        const revealEl = Reveal.getRevealElement();
+        const revealRect = revealEl.getBoundingClientRect();
+
+        canvas.style.left = `${revealRect.left}px`;
+        canvas.style.top = `${revealRect.top}px`;
+        canvas.style.width = `${revealRect.width}px`;
+        canvas.style.height = `${revealRect.height}px`;
+
+        loadAnnotations(Reveal.getIndices());
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    Reveal.on('ready', resizeCanvas);
+
+    function getCanvasPosition(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+            x: clientX - rect.left,
+            y: clientY - rect.top,
+        };
+    }
+
+    function saveAnnotations(indices) {
+        if (!indices) return;
+        const key = `${indices.h}-${indices.v}`;
+        savedAnnotations.set(key, canvas.toDataURL());
+    }
+
+    function loadAnnotations(indices) {
+        if (!indices) return;
+        const key = `${indices.h}-${indices.v}`;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (savedAnnotations.has(key)) {
+            const img = new Image();
+            img.src = savedAnnotations.get(key);
+            img.onload = () => ctx.drawImage(img, 0, 0);
+        }
+    }
+
+    Reveal.on('slidechanged', event => {
+        saveAnnotations(Reveal.getIndices(event.previousSlide));
+        loadAnnotations(Reveal.getIndices(event.currentSlide));
+
+        const newImage = getCurrentSlideImage();
+        if (newImage) {
+            const t = imageTransforms.get(newImage.src) || { scale: 1, x: 0, y: 0 };
+            applyTransform(newImage, t);
+        }
+    });
+
+    function start(e) {
+        e.preventDefault();
+        isDrawing = true;
+        const pos = getCanvasPosition(e);
+        startX = pos.x;
+        startY = pos.y;
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+    }
+
+    function draw(e) {
+        e.preventDefault();
+        if (!isDrawing) return;
+        const pos = getCanvasPosition(e);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        switch (currentTool) {
+            case 'pen':
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = 5;
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+                break;
+            case 'highlight':
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)';
+                ctx.lineWidth = 25;
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+                break;
+            case 'eraser':
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineWidth = 20;
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+                break;
+        }
+    }
+
+    function stop(e) {
+        e.preventDefault();
+        if (!isDrawing) return;
+        isDrawing = false;
+        if (currentTool === 'line') {
+            const pos = getCanvasPosition(e);
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        }
+    }
+
+    canvas.addEventListener('mousedown', start, { passive: false });
+    canvas.addEventListener('mousemove', draw, { passive: false });
+    canvas.addEventListener('mouseup', stop, { passive: false });
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stop, { passive: false });
+
+    canvas.addEventListener('click', function(e) {
+        if (currentTool !== 'text') return;
+        const pos = getCanvasPosition(e);
+        createTextInput(pos.x, pos.y);
+    });
+
+    function createTextInput(x, y) {
+        const input = document.createElement('textarea');
+        input.className = 'text-input-overlay';
+        const canvasRect = canvas.getBoundingClientRect();
+        input.style.left = `${canvasRect.left + x}px`;
+        input.style.top = `${canvasRect.top + y}px`;
+        input.style.fontSize = `24px`;
+        document.body.appendChild(input);
+        input.focus();
+
+        input.addEventListener('blur', () => {
+            drawText(input.value, x, y);
+            document.body.removeChild(input);
         });
+        input.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' && !e.shiftKey) input.blur();
+        });
+    }
 
-        document.getElementById('zoom-reset-btn').addEventListener('click', resetCurrentZoom);
+    function drawText(text, x, y) {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = strokeColor;
+        ctx.font = `24px sans-serif`;
+        const lines = text.split('\n');
+        lines.forEach((line, index) => {
+            ctx.fillText(line, x, y + (index * 28));
+        });
+    }
 
-        let isPanning = false;
-        let startPanX, startPanY;
+    toolbar.addEventListener('click', e => {
+        const btn = e.target.closest('.tool-btn');
+        if (!btn) return;
 
-        Reveal.getRevealElement().addEventListener('mousedown', (e) => {
-            const image = getCurrentSlideImage();
-            if (e.target === image) {
-                const t = imageTransforms.get(image.src) || { scale: 1, x: 0, y: 0 };
-                if (t.scale > 1) {
-                    isPanning = true;
-                    startPanX = e.clientX - t.x * t.scale;
-                    startPanY = e.clientY - t.y * t.scale;
-                    image.style.transition = 'none'; // Disable transition while panning
-                }
+        const selectedTool = btn.id.replace('-tool', '');
+        if (selectedTool === 'clear') {
+            if (confirm('Bạn có chắc muốn xóa tất cả chú thích trên slide này?')) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            if (isPanning) {
-                const image = getCurrentSlideImage();
-                if (!image) return;
-                const key = image.src;
-                const t = imageTransforms.get(key);
-                t.x = (e.clientX - startPanX) / t.scale;
-                t.y = (e.clientY - startPanY) / t.scale;
-                applyTransform(image, t);
-            }
-        });
-
-        window.addEventListener('mouseup', () => {
-            if (isPanning) {
-                 const image = getCurrentSlideImage();
-                 if(image) image.style.transition = 'transform 0.2s ease';
-                 isPanning = false;
-            }
-        });
-
-
-        // === LOGIC CHO CÔNG CỤ CHÚ THÍCH NÂNG CAO ===
-        const canvas = document.getElementById('annotation-canvas');
-        const ctx = canvas.getContext('2d');
-        const toolbar = document.querySelector('.annotation-toolbar');
-        
-        let currentTool = '';
-        let isDrawing = false;
-        let strokeColor = '#ff0000';
-        const savedAnnotations = new Map();
-
-        function resizeCanvas() {
-            const { width, height } = Reveal.getComputedSlideSize();
-            canvas.width = width;
-            canvas.height = height;
-            const scale = Reveal.getScale();
-            const revealEl = Reveal.getRevealElement();
-            const revealRect = revealEl.getBoundingClientRect();
-
-            canvas.style.transform = `translate(-50%, -50%) scale(${scale})`;
-            canvas.style.top = '50%';
-            canvas.style.left = `${revealRect.left + revealRect.width / 2}px`;
-            
-            loadAnnotations(Reveal.getIndices());
+            return;
         }
 
-        window.addEventListener('resize', resizeCanvas);
-        Reveal.on('ready', resizeCanvas);
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        document.body.className = document.body.className.replace(/\S+-tool-active/g, '').trim();
 
-        function getCanvasPosition(e) {
-            const rect = canvas.getBoundingClientRect();
-            const scale = Reveal.getScale();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return {
-                x: (clientX - rect.left) / scale,
-                y: (clientY - rect.top) / scale,
-            };
+        if (currentTool === selectedTool) {
+            currentTool = '';
+            document.body.classList.remove('annotation-active');
+        } else {
+            currentTool = selectedTool;
+            btn.classList.add('active');
+            document.body.classList.add('annotation-active');
+            document.body.classList.add(`${currentTool}-tool-active`);
         }
+    });
+    
+    document.getElementById('color-picker').addEventListener('input', e => {
+        strokeColor = e.target.value;
+    });
 
-        function saveAnnotations(indices) {
-            if (!indices) return;
-            const key = `${indices.h}-${indices.v}`;
-            savedAnnotations.set(key, canvas.toDataURL());
+    document.addEventListener('keydown', e => {
+        if (e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+        const keyMap = { p: 'pen', h: 'highlight', l: 'line', t: 'text', e: 'eraser' };
+        if (keyMap[e.key.toLowerCase()]) {
+            e.preventDefault();
+            document.getElementById(`${keyMap[e.key.toLowerCase()]}-tool`).click();
         }
-
-        function loadAnnotations(indices) {
-            if (!indices) return;
-            const key = `${indices.h}-${indices.v}`;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (savedAnnotations.has(key)) {
-                const img = new Image();
-                img.src = savedAnnotations.get(key);
-                img.onload = () => ctx.drawImage(img, 0, 0);
-            }
-        }
-
-        Reveal.on('slidechanged', event => {
-            saveAnnotations(Reveal.getIndices(event.previousSlide));
-            loadAnnotations(Reveal.getIndices(event.currentSlide));
-
-            // Apply saved transform to new slide image
-            const newImage = getCurrentSlideImage();
-            if (newImage) {
-                 const t = imageTransforms.get(newImage.src) || { scale: 1, x: 0, y: 0 };
-                 applyTransform(newImage, t);
-            }
-        });
-
-        function start(e) { /* ... existing code ... */ }
-        function draw(e) { /* ... existing code ... */ }
-        function stop(e) { /* ... existing code ... */ }
-        // (The annotation drawing functions start, draw, stop remain unchanged)
-        function start(e) {e.preventDefault(); isDrawing = true; const pos = getCanvasPosition(e); startX = pos.x; startY = pos.y; ctx.beginPath(); ctx.moveTo(startX, startY);}
-        function draw(e) {e.preventDefault(); if (!isDrawing) return; const pos = getCanvasPosition(e); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; switch (currentTool) {case 'pen': ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = strokeColor; ctx.lineWidth = 5; ctx.lineTo(pos.x, pos.y); ctx.stroke(); break; case 'highlight': ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)'; ctx.lineWidth = 25; ctx.lineTo(pos.x, pos.y); ctx.stroke(); break; case 'eraser': ctx.globalCompositeOperation = 'destination-out'; ctx.lineWidth = 20; ctx.lineTo(pos.x, pos.y); ctx.stroke(); break;}}
-        function stop(e) { e.preventDefault(); if (!isDrawing) return; isDrawing = false; if (currentTool === 'line') {const pos = getCanvasPosition(e); ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = strokeColor; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(pos.x, pos.y); ctx.stroke();}}
-
-
-        canvas.addEventListener('mousedown', start, { passive: false });
-        canvas.addEventListener('mousemove', draw, { passive: false });
-        canvas.addEventListener('mouseup', stop, { passive: false });
-        canvas.addEventListener('touchstart', start, { passive: false });
-        canvas.addEventListener('touchmove', draw, { passive: false });
-        canvas.addEventListener('touchend', stop, { passive: false });
-
-        canvas.addEventListener('click', function(e) {if (currentTool !== 'text') return; const pos = getCanvasPosition(e); createTextInput(pos.x, pos.y);});
-        function createTextInput(x, y) {const input = document.createElement('textarea'); input.className = 'text-input-overlay'; const scale = Reveal.getScale(); const canvasRect = canvas.getBoundingClientRect(); input.style.left = `${canvasRect.left + (x*scale)}px`; input.style.top = `${canvasRect.top + (y*scale)}px`; input.style.fontSize = `${24 * scale}px`; document.body.appendChild(input); input.focus(); input.addEventListener('blur', () => {drawText(input.value, x, y); document.body.removeChild(input);}); input.addEventListener('keydown', (e) => {if(e.key === 'Enter' && !e.shiftKey) {input.blur();}}); }
-        function drawText(text, x, y) {ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = strokeColor; ctx.font = `${24}px sans-serif`; const lines = text.split('\n'); lines.forEach((line, index) => {ctx.fillText(line, x, y + (index * 28));});}
-
-        toolbar.addEventListener('click', e => {
-            const btn = e.target.closest('.tool-btn');
-            if (!btn) return;
-            resetCurrentZoom(); // Reset zoom when a tool is selected
-            const selectedTool = btn.id.replace('-tool', '');
-            if (selectedTool === 'clear') {if (confirm('Bạn có chắc muốn xóa tất cả chú thích trên slide này?')) {ctx.clearRect(0, 0, canvas.width, canvas.height);} return;}
-            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-            document.body.className = document.body.className.replace(/\S+-tool-active/g, '').trim();
-            if (currentTool === selectedTool) {currentTool = ''; document.body.classList.remove('annotation-active');} else {currentTool = selectedTool; btn.classList.add('active'); document.body.classList.add('annotation-active'); document.body.classList.add(`${currentTool}-tool-active`);}
-        });
-        
-        document.getElementById('color-picker').addEventListener('input', e => {strokeColor = e.target.value;});
-
-        document.addEventListener('keydown', e => {if (e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return; const keyMap = { p: 'pen', h: 'highlight', l: 'line', t: 'text', e: 'eraser' }; if (keyMap[e.key.toLowerCase()]) {e.preventDefault(); document.getElementById(`${keyMap[e.key.toLowerCase()]}-tool`).click();}});
-    </script>
+    });
+</script>
 </body>
 </html>
 
